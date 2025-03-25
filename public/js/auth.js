@@ -15,7 +15,6 @@ if (loginForm) {
         const email = document.getElementById("email").value.trim();
         const password = document.getElementById("password").value;
 
-        // Simple email format validation
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailPattern.test(email)) {
             alert("Please enter a valid email address.");
@@ -44,8 +43,10 @@ if (loginForm) {
     });
 }
 
-// 🚀 Handle Signup with Validation
+// 🚀 Handle Signup with Validation + Spinner + Delayed Redirect
 const signupForm = document.getElementById("signupForm");
+const redirectSpinner = document.getElementById("redirectSpinner");
+
 if (signupForm) {
     signupForm.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -53,7 +54,6 @@ if (signupForm) {
         const email = document.getElementById("email").value.trim();
         const password = document.getElementById("password").value;
 
-        // Email and password validation
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         const passwordPattern = /^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
 
@@ -78,7 +78,13 @@ if (signupForm) {
             });
 
             if (res.ok) {
-                window.location.href = "/dashboard";
+                // 🎉 Hide form, show spinner, redirect after 1s
+                signupForm.classList.add("d-none");
+                redirectSpinner.classList.remove("d-none");
+
+                setTimeout(() => {
+                    window.location.href = "/login";
+                }, 1000);
             } else {
                 alert("Signup failed. Please try again.");
             }
