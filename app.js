@@ -17,19 +17,29 @@ const __dirname = path.dirname(__filename);
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json()); // 👈 Needed for JSON requests from frontend (like sessionLogin)
 app.use(express.static(path.join(__dirname, "public")));
 app.set("view engine", "ejs");
 
 // Session
 app.use(session({
-    secret: "wpgwallet-secret",
+    secret: process.env.SESSION_SECRET || "wpgwallet-secret",
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 24 // 1 day
+    }
 }));
 
 // Routes
 app.use("/", authRoutes);
 app.use("/dashboard", dashboardRoutes);
+
+// Default route (optional)
+app.get("/", (req, res) => {
+    res.redirect("/login");
+});
 
 // Start server
 const PORT = process.env.PORT || 3000;
