@@ -1,3 +1,4 @@
+// import { name } from "ejs";
 import {
     auth,
     provider,
@@ -60,6 +61,12 @@ if (signupForm) {
 
         const email = document.getElementById("email").value.trim();
         const password = document.getElementById("password").value;
+    
+        const firstName = document.querySelector('input[placeholder="John"]').value.trim();
+        const lastName = document.querySelector('input[placeholder="Doe"]').value.trim();
+        const name = `${firstName} ${lastName}`;
+        console.log(name);
+
 
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         const passwordPattern = /^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
@@ -75,14 +82,25 @@ if (signupForm) {
         }
 
         try {
-            await createUserWithEmailAndPassword(auth, email, password);
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            const idToken = await user.getIdToken();
+            console.log("reached here");
+      
+            // ✅ Send name to backend
+            await fetch("/sessionLogin", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ idToken, name })
+            });
+      
             await auth.signOut();
-
+      
             signupForm.classList.add("d-none");
             redirectSpinner.classList.remove("d-none");
-
+      
             setTimeout(() => {
-                window.location.href = "/login";
+              window.location.href = "/login";
             }, 1000);
         } catch (err) {
             console.error("Signup Error:", err.message);

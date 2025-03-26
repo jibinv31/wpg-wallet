@@ -3,7 +3,7 @@ import express from "express";
 const router = express.Router();
 
 router.get("/", (req, res) => {
-    res.send("Welcome to the WPG Wallet dashboard! 🔐");
+    res.render("dashboard", { user: req.session.user });
 });
 
 export default router;
