@@ -8,6 +8,8 @@ import {
 
 // 🚀 Handle Login
 const loginForm = document.getElementById("loginForm");
+const loginSpinner = document.getElementById("loginSpinner");
+
 if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -32,7 +34,12 @@ if (loginForm) {
             });
 
             if (res.ok) {
-                window.location.href = "/dashboard";
+                loginForm.classList.add("d-none");
+                loginSpinner.classList.remove("d-none");
+
+                setTimeout(() => {
+                    window.location.href = "/dashboard";
+                }, 1000);
             } else {
                 alert("Login failed. Please try again.");
             }
@@ -43,7 +50,7 @@ if (loginForm) {
     });
 }
 
-// 🚀 Handle Signup with Validation + Spinner + Delayed Redirect
+// 🚀 Handle Signup with Validation + Spinner + Sign-out + Redirect to Login
 const signupForm = document.getElementById("signupForm");
 const redirectSpinner = document.getElementById("redirectSpinner");
 
@@ -68,26 +75,15 @@ if (signupForm) {
         }
 
         try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            const idToken = await userCredential.user.getIdToken();
+            await createUserWithEmailAndPassword(auth, email, password);
+            await auth.signOut();
 
-            const res = await fetch("/sessionLogin", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ idToken })
-            });
+            signupForm.classList.add("d-none");
+            redirectSpinner.classList.remove("d-none");
 
-            if (res.ok) {
-                // 🎉 Hide form, show spinner, redirect after 1s
-                signupForm.classList.add("d-none");
-                redirectSpinner.classList.remove("d-none");
-
-                setTimeout(() => {
-                    window.location.href = "/login";
-                }, 1000);
-            } else {
-                alert("Signup failed. Please try again.");
-            }
+            setTimeout(() => {
+                window.location.href = "/login";
+            }, 1000);
         } catch (err) {
             console.error("Signup Error:", err.message);
             alert("Signup failed. Make sure your password is strong enough.");

@@ -28,6 +28,14 @@
             background: linear-gradient(to right, #3b82f6, #2563eb);
             color: white;
         }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -81,10 +89,11 @@
                         required />
                 </div>
 
-                <div class="mb-4">
+                <div class="mb-4 position-relative">
                     <label>Password</label>
                     <input type="password" id="password" name="password" class="form-control"
                         placeholder="Enter your password" required />
+                    <span class="password-toggle" onclick="togglePassword('password')">👁️</span>
                 </div>
 
                 <button type="submit" class="btn blue-gradient w-100">Sign up</button>
@@ -111,6 +120,13 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function togglePassword(id) {
+            const input = document.getElementById(id);
+            input.type = input.type === "password" ? "text" : "password";
+        }
+    </script>
 
     <!-- Firebase Auth -->
     <script type="module" src="/js/firebase-config.js"></script>
