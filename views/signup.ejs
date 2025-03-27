@@ -42,55 +42,57 @@
 <body>
     <div class="container d-flex align-items-center justify-content-center min-vh-100">
         <div class="w-100 d-flex justify-content-center">
+            <!-- Signup Form -->
             <form id="signupForm" class="form-section">
                 <h3 class="mb-4">Sign up</h3>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label>First Name</label>
-                        <input type="text" class="form-control" placeholder="John" />
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" class="form-control" placeholder="John" required />
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label>Last Name</label>
-                        <input type="text" class="form-control" placeholder="Doe" />
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" class="form-control" placeholder="Doe" required />
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label>Address</label>
-                    <input type="text" class="form-control" placeholder="Enter your specific address" />
+                    <label for="address">Address</label>
+                    <input type="text" id="address" class="form-control" placeholder="Enter your specific address"
+                        required />
                 </div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label>State</label>
-                        <input type="text" class="form-control" placeholder="ex: NY" />
+                        <label for="state">State</label>
+                        <input type="text" id="state" class="form-control" placeholder="ex: MB" required />
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label>Postal Code</label>
-                        <input type="text" class="form-control" placeholder="ex: 11101" />
+                        <label for="postalCode">Postal Code</label>
+                        <input type="text" id="postalCode" class="form-control" placeholder="ex: R3C 0A1" required />
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label>Date of Birth</label>
-                        <input type="date" class="form-control" />
+                        <label for="dob">Date of Birth</label>
+                        <input type="date" id="dob" class="form-control" required />
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label>SSN</label>
-                        <input type="text" class="form-control" placeholder="ex: 1234" />
+                        <label for="ssn">SSN</label>
+                        <input type="text" id="ssn" class="form-control" placeholder="ex: 1234" required />
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label>Email</label>
+                    <label for="email">Email</label>
                     <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email"
                         required />
                 </div>
 
                 <div class="mb-4 position-relative">
-                    <label>Password</label>
+                    <label for="password">Password</label>
                     <input type="password" id="password" name="password" class="form-control"
                         placeholder="Enter your password" required />
                     <span class="password-toggle" onclick="togglePassword('password')">👁️</span>

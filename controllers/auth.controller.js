@@ -11,39 +11,32 @@ export const sessionLogin = async (req, res) => {
         const email = decodedToken.email;
         console.log(`✅ Token verified for user: ${email} (UID: ${uid})`);
 
-        // req.session.user = { uid, email };
-
-        // Create user in Firestore if not exists
-        // const userRef = db.collection("users").doc(uid);
-        // const userSnap = await userRef.get();
-        // if (!userSnap.exists) {
-        //     console.log("📄 Creating Firestore user doc...");
-        //     await userRef.set({
-        //         email,
-        //         balance: 1000.0,
-        //         createdAt: new Date().toISOString(),
-        //     });
-        // }
         let user = await getUserById(uid);
+
         if (!user) {
-            console.log("🆕 Creating new Firestore user");
-        await createUser(uid, {
-        name,
-        email,
-        balance: 1000,
-        createdAt: new Date().toISOString(),
-    });
-        user = { name, email };
-     }
-         else {
+            if (!name || name.trim() === "") {
+                console.warn("⚠️ Missing name for new user. Cannot create Firestore user.");
+                return res.status(400).json({ error: "Name is required for new user creation." });
+            }
+
+            console.log("🆕 Creating new Firestore user...");
+            await createUser(uid, {
+                name: name.trim(),
+                email,
+                balance: 1000,
+                createdAt: new Date().toISOString(),
+            });
+
+            user = { name: name.trim(), email };
+        } else {
             console.log("📦 Firestore user doc already exists");
         }
 
         req.session.user = {
             uid,
             email,
-            name: user.name || name
-          };
+            name: user.name || name || "User"
+        };
 
         return res.status(200).json({ message: "Session created" });
     } catch (error) {
@@ -59,6 +52,7 @@ export const logout = (req, res) => {
             console.error("❌ Error destroying session:", err.message);
             return res.status(500).send("Logout error");
         }
+        console.log("✅ Session destroyed. Redirecting to login.");
         res.redirect("/login");
     });
 };

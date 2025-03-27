@@ -1,6 +1,12 @@
 <nav class="navbar navbar-light bg-light px-4 shadow">
-    <span class="navbar-brand mb-0 h1 text-primary fw-bold">WPG-Wallet</span>
-    <span class="text-muted">Welcome, <strong><%= user.name || "User" %></strong></span>
+  <span class="navbar-brand mb-0 h1 text-primary fw-bold">WPG-Wallet</span>
 
-  </nav>
-  
+  <% if (user) { %>
+    <div class="d-flex align-items-center gap-3">
+      <span class="text-muted mb-0">Welcome, <strong>
+          <%= user.name || "User" %>
+        </strong></span>
+      <a href="/logout" class="btn btn-outline-danger btn-sm">Sign Out</a>
+    </div>
+    <% } %>
+</nav>
