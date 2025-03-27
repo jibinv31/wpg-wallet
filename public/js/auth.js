@@ -103,11 +103,21 @@ if (signupForm) {
                 window.location.href = "/login";
             }, 1000);
         } catch (err) {
-            console.error("Signup Error:", err.message);
-            alert("Signup failed. Please try again.");
-        }
-    });
-}
+            console.error("Signup Error:", err);
+      
+            if (err.code === "auth/email-already-in-use") {
+              alert("An account with this email already exists. Redirecting to login...");
+              setTimeout(() => {
+                window.location.href = "/login";
+              }, 2000);
+            } else if (err.code === "auth/weak-password") {
+              alert("Password is too weak. Use at least 8 characters, an uppercase letter, a number, and a symbol.");
+            } else {
+              alert("Signup failed. Please try again.");
+            }
+          }
+        });
+      }
 
 // 🚀 Google Sign-In (✅ Fixed to send name properly)
 const googleBtn = document.getElementById("googleLogin");
