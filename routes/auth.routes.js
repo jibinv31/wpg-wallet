@@ -22,10 +22,10 @@ router.get("/login", (req, res) => {
 });
 
 // ✅ Protected Dashboard route
-router.get("/dashboard", requireAuth, (req, res) => {
-    console.log("🧾 GET /dashboard page rendered");
-    res.render("dashboard", { user: req.session.user });
-});
+// router.get("/dashboard", requireAuth, (req, res) => {
+//     console.log("🧾 GET /dashboard page rendered");
+//     res.render("dashboard", { user: req.session.user });
+// });
 
 // 🔐 Auth routes
 router.post("/sessionLogin", sessionLogin);

@@ -5,20 +5,115 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard | WPG-Wallet</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    .card-stat {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .donut svg {
+      width: 60px;
+      height: 60px;
+    }
+  </style>
 </head>
 <body class="d-flex flex-column" style="min-height: 100vh;">
 
   <!-- Header -->
   <%- include('partials/header', { user: user }) %>
 
-
   <!-- Main layout -->
   <div class="d-flex flex-grow-1">
     <%- include('partials/nav') %>
 
     <main class="flex-grow-1 p-4 bg-white">
-      <h2 class="mb-4">Dashboard</h2>
-      <!-- Add dashboard content here -->
+
+      <!-- Welcome -->
+      <div class="mb-4">
+        <h4 class="text-muted">Welcome, <span class="text-primary"><%= user.name || 'User' %></span></h4>
+        <p>Access & manage your account and transactions efficiently.</p>
+      </div>
+
+      <!-- Bank Account Summary -->
+      <div class="card-stat mb-4">
+        <div class="d-flex align-items-center gap-3">
+          <div class="donut">
+            <svg viewBox="0 0 60 60">
+              <!-- Background -->
+              <circle r="25" cx="30" cy="30" fill="transparent" stroke="#e0e0e0" stroke-width="6" />
+              <!-- Progress -->
+              <circle r="25" cx="30" cy="30" fill="transparent"
+                stroke="#3b82f6" stroke-width="6"
+                stroke-dasharray="<%= Math.min(accountCount * 25, 100) %> 100"
+                stroke-linecap="round"
+                transform="rotate(-90 30 30)" />
+            </svg>
+          </div>
+          <div>
+            <strong><%= accountCount %> Bank Account<%= accountCount !== 1 ? 's' : '' %></strong>
+          </div>
+        </div>
+        <a href="/add-bank" class="btn btn-primary">+ Add Bank</a>
+      </div>
+
+      <!-- Recent Transactions (Static for now) -->
+      <div class="mt-5">
+        <h5 class="mb-3">Recent Transactions</h5>
+        <table class="table table-hover border">
+          <thead class="table-light">
+            <tr>
+              <th>Transaction</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Category</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Spotify</td>
+              <td class="text-danger">- $15.00</td>
+              <td><span class="badge bg-warning text-dark">Processing</span></td>
+              <td>Wed 1:00pm</td>
+              <td><span class="badge rounded-pill bg-light text-primary">Subscriptions</span></td>
+            </tr>
+            <tr>
+              <td>Alexa Doe</td>
+              <td class="text-success">+ $88.00</td>
+              <td><span class="badge bg-success">Success</span></td>
+              <td>Wed 2:45am</td>
+              <td><span class="badge rounded-pill bg-light text-success">Deposit</span></td>
+            </tr>
+            <tr>
+              <td>Figma</td>
+              <td class="text-danger">- $18.99</td>
+              <td><span class="badge bg-warning text-dark">Processing</span></td>
+              <td>Tue 6:10pm</td>
+              <td><span class="badge rounded-pill bg-light text-info">Income</span></td>
+            </tr>
+            <tr>
+              <td>Fresh F&V</td>
+              <td class="text-danger">- $88.00</td>
+              <td><span class="badge bg-success">Success</span></td>
+              <td>Tue 12:15pm</td>
+              <td><span class="badge rounded-pill bg-light text-secondary">Groceries</span></td>
+            </tr>
+            <tr>
+              <td>Sam Sulek</td>
+              <td class="text-danger">- $40.20</td>
+              <td><span class="badge bg-danger">Declined</span></td>
+              <td>Tue 5:40am</td>
+              <td><span class="badge rounded-pill bg-light text-danger">Food</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
     </main>
   </div>
 

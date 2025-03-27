@@ -8,7 +8,7 @@ import { fileURLToPath } from "url";
 // Import routes
 import authRoutes from "./routes/auth.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
-
+import bankRoutes from "./routes/bank.routes.js";
 // Setup
 dotenv.config();
 const app = express();
@@ -34,7 +34,8 @@ app.use(session({
 
 // Routes
 app.use("/", authRoutes);
-app.use("/dashboard", dashboardRoutes);
+app.use("/", dashboardRoutes);
+app.use("/", bankRoutes);
 
 // Default route (optional)
 app.get("/", (req, res) => {
