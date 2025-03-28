@@ -8,7 +8,6 @@ router.get("/dashboard", async (req, res) => {
 
   try {
     const accounts = await getAccountsByUser(uid);
-    
     const totalBalance = accounts.reduce((sum, acc) => sum + Number(acc.balance || 0), 0);
     const accountCount = accounts.length;
 
@@ -17,6 +16,7 @@ router.get("/dashboard", async (req, res) => {
       accounts,
       totalBalance,
       accountCount,
+      currentRoute: "home" // ✅ Add this
     });
   } catch (err) {
     console.error("Dashboard error:", err.message);

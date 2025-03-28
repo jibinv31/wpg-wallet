@@ -4,7 +4,10 @@ import { addAccount } from "../models/account.model.js";
 const router = express.Router();
 
 router.get("/add-bank", (req, res) => {
-  res.render("add-bank", { user: req.session.user });
+  res.render("add-bank", {
+    user: req.session.user,
+    currentRoute: "add-bank" // ✅ Used to highlight nav (optional if needed)
+  });
 });
 
 router.post("/add-bank", async (req, res) => {
@@ -12,7 +15,7 @@ router.post("/add-bank", async (req, res) => {
   const userId = req.session.user.uid;
 
   try {
-    await addAccount(userId,{
+    await addAccount(userId, {
       bankName,
       accountNumber,
       accountType,
