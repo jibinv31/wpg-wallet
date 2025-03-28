@@ -1,15 +1,28 @@
 import express from "express";
-import { addAccount } from "../models/account.model.js";
+import { addAccount, getAccountsByUser } from "../models/account.model.js";
 
 const router = express.Router();
 
-router.get("/add-bank", (req, res) => {
-  res.render("add-bank", {
-    user: req.session.user,
-    currentRoute: "add-bank" // ✅ Used to highlight nav (optional if needed)
-  });
+// GET Add Bank Page
+router.get("/add-bank", async (req, res) => {
+  try {
+    const user = req.session.user;
+    if (!user) return res.redirect("/login");
+
+    const accounts = await getAccountsByUser(user.uid);
+
+    res.render("add-bank", {
+      user,
+      accounts,
+      currentRoute: "add-bank" // For nav highlighting
+    });
+  } catch (error) {
+    console.error("Error loading Add Bank page:", error.message);
+    res.status(500).send("Failed to load Add Bank page.");
+  }
 });
 
+// POST Add Bank Submission
 router.post("/add-bank", async (req, res) => {
   const { bankName, accountNumber, accountType, balance } = req.body;
   const userId = req.session.user.uid;

@@ -32,7 +32,8 @@
 
         <!-- Main layout -->
         <div class="d-flex flex-grow-1">
-            <%- include('partials/nav') %>
+            <!-- ✅ Pass currentRoute to nav for proper highlight -->
+            <%- include('partials/nav', { currentRoute: 'banks' }) %>
 
                 <main class="flex-grow-1 p-4 bg-white">
                     <div class="mb-4">
@@ -52,8 +53,7 @@
                                             <p class="mb-1"><strong>Type:</strong>
                                                 <%= account.accountType %>
                                             </p>
-                                            <p class="mb-1">
-                                                <strong>Account Number:</strong>
+                                            <p class="mb-1"><strong>Account Number:</strong>
                                                 <% if (account.accountNumber==="Plaid Linked" ) { %>
                                                     <em>
                                                         <%= account.accountNumber %>
@@ -82,6 +82,7 @@
 
         <!-- Footer -->
         <%- include('partials/footer') %>
+
 </body>
 
 </html>

@@ -4,25 +4,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Linked Banks | WPG-Wallet</title>
+  <title>Add Bank | WPG-Wallet</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <style>
-    .card-stat {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1rem;
-      border: 1px solid #eee;
-      border-radius: 8px;
-      background-color: #fff;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    .donut svg {
-      width: 60px;
-      height: 60px;
-    }
-  </style>
 </head>
 
 <body class="d-flex flex-column" style="min-height: 100vh;">
@@ -32,55 +15,82 @@
 
     <!-- Main layout -->
     <div class="d-flex flex-grow-1">
-      <%- include('partials/nav') %>
+      <!-- ✅ Keep My Banks highlighted -->
+      <%- include('partials/nav', { currentRoute: 'banks' }) %>
 
         <main class="flex-grow-1 p-4 bg-white">
-          <div class="mb-4">
-            <h4 class="text-muted">Your Linked Banks</h4>
-            <p>Review all your connected accounts below.</p>
-          </div>
+          <div class="container">
+            <h3 class="mb-4">🔗 Link a New Bank</h3>
 
-          <% if (accounts && accounts.length> 0) { %>
-            <div class="row">
-              <% accounts.forEach(account=> { %>
-                <div class="col-md-6 mb-4">
-                  <div class="card shadow-sm">
-                    <div class="card-body">
-                      <h5 class="card-title">
-                        <%= account.bankName %>
-                      </h5>
-                      <p class="mb-1"><strong>Type:</strong>
-                        <%= account.accountType %>
-                      </p>
-                      <p class="mb-1">
-                        <strong>Account Number:</strong>
-                        <% if (account.accountNumber==="Plaid Linked" ) { %>
-                          <em>
-                            <%= account.accountNumber %>
-                          </em>
-                          <% } else { %>
-                            ****<%= account.accountNumber.slice(-4) %>
-                              <% } %>
-                      </p>
-                      <p class="mb-1"><strong>Balance:</strong> $<%= parseFloat(account.balance).toFixed(2) %>
-                      </p>
-                      <p class="mb-0 text-muted"><small>Linked on <%= new Date(account.createdAt).toLocaleDateString()
-                            %></small></p>
-                    </div>
-                  </div>
-                </div>
-                <% }) %>
+            <!-- ✅ Plaid Button -->
+            <div class="mb-4">
+              <button id="plaidLinkBtn" class="btn btn-primary">Link with Plaid</button>
             </div>
-            <% } else { %>
-              <p class="text-muted">No bank accounts linked yet.</p>
-              <% } %>
 
-                <a href="/add-bank" class="btn btn-primary mt-4">+ Link Another Bank</a>
+            <!-- ✅ Manual Bank Form -->
+            <form action="/add-bank" method="POST" class="bg-white p-4 rounded shadow-sm">
+              <div class="mb-3">
+                <label class="form-label">Bank Name</label>
+                <input type="text" name="bankName" class="form-control" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Account Number</label>
+                <input type="text" name="accountNumber" class="form-control" required />
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Account Type</label>
+                <select name="accountType" class="form-select" required>
+                  <option value="Savings">Savings</option>
+                  <option value="Checking">Checking</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Initial Balance</label>
+                <input type="number" name="balance" step="0.01" class="form-control" required />
+              </div>
+              <button type="submit" class="btn btn-success">Link Bank</button>
+              <a href="/banks" class="btn btn-secondary ms-2">Cancel</a>
+            </form>
+          </div>
         </main>
     </div>
 
     <!-- Footer -->
     <%- include('partials/footer') %>
+
+      <!-- ✅ Plaid Script -->
+      <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+      <script type="module">
+        const linkBtn = document.getElementById("plaidLinkBtn");
+
+        linkBtn?.addEventListener("click", async () => {
+          try {
+            const res = await fetch("/plaid/create-link-token");
+            const { link_token } = await res.json();
+
+            const handler = window.Plaid.create({
+              token: link_token,
+              onSuccess: async (public_token, metadata) => {
+                await fetch("/plaid/exchange-token", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ public_token })
+                });
+
+                window.location.href = "/banks";
+              },
+              onExit: (err, metadata) => {
+                console.warn("User exited Plaid", err);
+              }
+            });
+
+            handler.open();
+          } catch (err) {
+            console.error("Plaid error:", err);
+            alert("Failed to initialize Plaid.");
+          }
+        });
+      </script>
 </body>
 
 </html>
