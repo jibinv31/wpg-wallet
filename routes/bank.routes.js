@@ -1,6 +1,6 @@
 import express from "express";
-import { addAccount, getAccountsByUser } from "../models/account.model.js";
-
+//import { addAccount, getAccountsByUser } from "../models/plaid.model.js";
+import { getAccountsByUser } from "../models/plaid.model.js";
 const router = express.Router();
 
 // GET Add Bank Page
@@ -22,25 +22,6 @@ router.get("/add-bank", async (req, res) => {
   }
 });
 
-// POST Add Bank Submission
-router.post("/add-bank", async (req, res) => {
-  const { bankName, accountNumber, accountType, balance } = req.body;
-  const userId = req.session.user.uid;
 
-  try {
-    await addAccount(userId, {
-      bankName,
-      accountNumber,
-      accountType,
-      balance: parseFloat(balance),
-      createdAt: new Date().toISOString(),
-    });
-
-    res.redirect("/dashboard");
-  } catch (err) {
-    console.error("Add Bank Error:", err.message);
-    res.status(500).send("Failed to link bank");
-  }
-});
 
 export default router;

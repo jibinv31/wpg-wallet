@@ -1,12 +1,19 @@
+// models/transaction.model.js
 import { db } from "../services/firebase.js";
 
-const transactionsRef = db.collection("transactions");
+const transactionRef = db.collection("transactions");
 
-export const addTransaction = async (transaction) => {
-  return await transactionsRef.add(transaction);
+// Create a new transaction log
+export const createTransaction = async (transaction) => {
+  const doc = await transactionRef.add({
+    ...transaction,
+    createdAt: new Date().toISOString(),
+  });
+  return doc.id;
 };
 
-export const getTransactionsByUser = async (uid) => {
-  const snap = await transactionsRef.where("userId", "==", uid).orderBy("date", "desc").get();
-  return snap.docs.map(doc => doc.data());
+// Optional: Fetch transactions by user or account
+export const getTransactionsByUser = async (userId) => {
+  const snapshot = await transactionRef.where("userId", "==", userId).get();
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 };

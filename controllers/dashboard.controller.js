@@ -1,4 +1,4 @@
-import { getAccountsByUser } from "../models/account.model.js";
+import { getAccountsByUser } from "../models/plaid.model.js";
 
 export const showDashboard = async (req, res) => {
   try {

@@ -22,7 +22,7 @@ import dashboardRoutes from "./routes/dashboard.routes.js";
 import bankRoutes from "./routes/bank.routes.js";
 import plaidRoutes from "./routes/plaid.routes.js";
 import bankacRoutes from "./routes/bankac.routes.js";
-
+import paymentRoutes from "./routes/payment.routes.js";
 // 📄 Middleware
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json()); // Required for JSON POSTs like /sessionLogin
@@ -48,6 +48,7 @@ app.use("/", dashboardRoutes);
 app.use("/", bankRoutes);
 app.use("/", bankacRoutes);
 app.use("/plaid", plaidRoutes); // ✅ Plaid integration with prefix
+app.use("/", paymentRoutes);
 
 // 🔁 Default route
 app.get("/", (req, res) => {

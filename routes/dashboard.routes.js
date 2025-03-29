@@ -1,5 +1,5 @@
 import express from "express";
-import { getAccountsByUser } from "../models/account.model.js";
+import { getAccountsByUser } from "../models/plaid.model.js";
 import { db } from "../services/firebase.js"; // 👈 Required for linked_banks
 
 const router = express.Router();
@@ -30,10 +30,10 @@ router.get("/dashboard", async (req, res) => {
 
     res.render("dashboard", {
       user: req.session.user,
-      accounts: manualAccounts, // Used for rendering recent transactions
+      accounts: plaidAccounts, // Used for rendering recent transactions
       totalBalance,
-      accountCount,
-      currentRoute: "home"
+      accountCount: plaidAccounts.length,
+      currentRoute: "dashboard"
     });
   } catch (err) {
     console.error("Dashboard error:", err.message);

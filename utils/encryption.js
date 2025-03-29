@@ -13,11 +13,22 @@ export const encrypt = (text) => {
 };
 
 export const decrypt = (hash) => {
-    const [ivHex, encryptedData] = hash.split(":");
-    const ivBuffer = Buffer.from(ivHex, "hex");
-    const encryptedBuffer = Buffer.from(encryptedData, "hex");
+    try {
+        if (!hash || typeof hash !== "string" || !hash.includes(":")) {
+            console.warn("⚠️ Skipping decryption – invalid or missing hash.");
+            return null;
+        }
 
-    const decipher = crypto.createDecipheriv(algorithm, Buffer.from(secretKey, "hex"), ivBuffer);
-    const decrypted = Buffer.concat([decipher.update(encryptedBuffer), decipher.final()]);
-    return decrypted.toString("utf8");
+        const [ivHex, encryptedData] = hash.split(":");
+        const ivBuffer = Buffer.from(ivHex, "hex");
+        const encryptedBuffer = Buffer.from(encryptedData, "hex");
+
+        const decipher = crypto.createDecipheriv(algorithm, Buffer.from(secretKey, "hex"), ivBuffer);
+        const decrypted = Buffer.concat([decipher.update(encryptedBuffer), decipher.final()]);
+        return decrypted.toString("utf8");
+    } catch (err) {
+        console.error("❌ Decryption failed:", err.message);
+        return null;
+    }
 };
+
