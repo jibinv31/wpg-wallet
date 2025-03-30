@@ -26,9 +26,10 @@
             <option value="" selected disabled>Select Account</option>
             <% accounts.forEach(account => { %>
               <option value="<%= account.id %>">
-                <%= account.bankName %> - <%= account.accountNumber %> (Balance: $<%= account.balance %>)
+                <%= account.bankName %> - ****<%= account.accountNumber %> ($<%= account.balance %>)
               </option>
             <% }) %>
+            
           </select>
         </div>
 

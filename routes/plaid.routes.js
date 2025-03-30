@@ -120,51 +120,99 @@ router.post("/exchange-token", async (req, res) => {
 
   
 // POST /select-accounts
+// router.post("/select-accounts", async (req, res) => {
+//     const { selectedAccounts } = req.body;
+//     const { uid: userId } = req.session.user;
+//     const { accessToken, institution } = req.session.plaid || {};
+  
+//     try {
+//       if (!selectedAccounts || !accessToken || !institution) {
+//         return res.status(400).send("Missing account selection or session data.");
+//       }
+  
+//       const accountIds = Array.isArray(selectedAccounts)
+//         ? selectedAccounts
+//         : [selectedAccounts];
+  
+//       const accountsResponse = await plaidClient.accountsGet({
+//         access_token: accessToken,
+//       });
+  
+//       const selected = accountsResponse.data.accounts.filter(acct =>
+//         accountIds.includes(acct.account_id)
+//       );
+  
+//       const encryptedToken = encrypt(accessToken); // 🔐 Encrypt token once
+  
+//       for (const acct of selected) {
+//         await db.collection("linked_banks").add({
+//           userId,
+//           accountId: acct.account_id,
+//           accessToken: encryptedToken,
+//           itemId: acct.account_id, // optional tracking
+//           institution,
+//           accountNumber: acct.mask || acct.account_id.slice(-4),
+//           accountType: acct.subtype || "Plaid Linked",
+//           balance: acct.balances.available ?? acct.balances.current ?? 0,
+//           linkedAt: new Date().toISOString(),
+//         });
+//       }
+  
+//       console.log(`✅ Saved ${selected.length} selected Plaid accounts for ${userId}`);
+//       res.redirect("/banks");
+  
+//     } catch (error) {
+//       console.error("❌ Error saving selected accounts:", error.message);
+//       res.status(500).send("Failed to save selected accounts.");
+//     }
+//   });
+
 router.post("/select-accounts", async (req, res) => {
     const { selectedAccounts } = req.body;
-    const { uid: userId } = req.session.user;
+    const { uid: userId, email: userEmail } = req.session.user;
     const { accessToken, institution } = req.session.plaid || {};
-  
+
     try {
-      if (!selectedAccounts || !accessToken || !institution) {
-        return res.status(400).send("Missing account selection or session data.");
-      }
-  
-      const accountIds = Array.isArray(selectedAccounts)
-        ? selectedAccounts
-        : [selectedAccounts];
-  
-      const accountsResponse = await plaidClient.accountsGet({
-        access_token: accessToken,
-      });
-  
-      const selected = accountsResponse.data.accounts.filter(acct =>
-        accountIds.includes(acct.account_id)
-      );
-  
-      const encryptedToken = encrypt(accessToken); // 🔐 Encrypt token once
-  
-      for (const acct of selected) {
-        await db.collection("linked_banks").add({
-          userId,
-          accessToken: encryptedToken,
-          itemId: acct.account_id, // optional tracking
-          institution,
-          accountNumber: acct.mask || acct.account_id.slice(-4),
-          accountType: acct.subtype || "Plaid Linked",
-          balance: acct.balances.available ?? acct.balances.current ?? 0,
-          linkedAt: new Date().toISOString(),
+        if (!selectedAccounts || !accessToken || !institution) {
+            return res.status(400).send("Missing account selection or session data.");
+        }
+
+        const accountIds = Array.isArray(selectedAccounts)
+            ? selectedAccounts
+            : [selectedAccounts];
+
+        const accountsResponse = await plaidClient.accountsGet({
+            access_token: accessToken,
         });
-      }
-  
-      console.log(`✅ Saved ${selected.length} selected Plaid accounts for ${userId}`);
-      res.redirect("/banks");
-  
+
+        const selected = accountsResponse.data.accounts.filter((acct) =>
+            accountIds.includes(acct.account_id)
+        );
+
+        const encryptedToken = encrypt(accessToken);
+
+        for (const acct of selected) {
+            await db.collection("linked_banks").add({
+                userId,
+                userEmail: req.session.user.email, // ✅ Save for recipient lookup
+                accessToken: encryptedToken,
+                itemId: acct.account_id,
+                institution,
+                accountNumber: acct.mask || acct.account_id.slice(-4),
+                accountType: acct.subtype || "Plaid Linked",
+                balance: acct.balances.available ?? acct.balances.current ?? 0,
+                linkedAt: new Date().toISOString(),
+            });
+        }
+
+        console.log(`✅ Saved ${selected.length} selected Plaid accounts for ${userId}`);
+        res.redirect("/banks");
     } catch (error) {
-      console.error("❌ Error saving selected accounts:", error.message);
-      res.status(500).send("Failed to save selected accounts.");
+        console.error("❌ Error saving selected accounts:", error.message);
+        res.status(500).send("Failed to save selected accounts.");
     }
-  });
+});
+
   
 
 
