@@ -1,17 +1,63 @@
 import { getAccountsByUser } from "../models/plaid.model.js";
+import { db } from "../services/firebase.js";
 
-export const showDashboard = async (req, res) => {
+export const renderDashboard = async (req, res) => {
+  const uid = req.session?.user?.uid;
+  const user = req.session.user;
+
+  if (!uid) return res.redirect("/login");
+
   try {
-    const uid = req.session.user.uid;
-    const accounts = await getAccountsByUser(uid);
+    // Manual accounts
+    const manualAccounts = await getAccountsByUser(uid);
+
+    // Plaid-linked accounts
+    const plaidSnap = await db
+      .collection("linked_banks")
+      .where("userId", "==", uid)
+      .get();
+
+    const plaidAccounts = plaidSnap.docs.map(doc => doc.data());
+
+    const accountCount = manualAccounts.length + plaidAccounts.length;
+    const totalBalance = manualAccounts.reduce(
+      (sum, acc) => sum + Number(acc.balance || 0),
+      0
+    );
+
+    // 🕒 Get ALL transactions and manually filter last 7 days
+    const allTxnSnap = await db
+      .collection("transactions")
+      .where("userId", "==", uid)
+      .orderBy("date", "desc")
+      .limit(50)
+      .get();
+
+    const allTxns = allTxnSnap.docs.map(doc => doc.data());
+    console.log("📦 ALL Firestore transactions:", allTxns.length);
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const recentTransactions = allTxns
+      .filter(txn => {
+        const txnDate = new Date(txn.date);
+        return txnDate >= sevenDaysAgo;
+      })
+      .slice(0, 5); // Show max 5
+
+    console.log("📥 Recent transactions found:", recentTransactions.length);
 
     res.render("dashboard", {
-      user: req.session.user,
-      accounts,
+      user,
+      accounts: plaidAccounts,
       totalBalance,
+      accountCount,
+      recentTransactions,
+      currentRoute: "dashboard"
     });
-  } catch (err) {
-    console.error("Dashboard error:", err.message);
-    res.status(500).send("Error loading dashboard");
+  } catch (error) {
+    console.error("❌ Dashboard error:", error.message);
+    res.status(500).send("Something went wrong.");
   }
 };
