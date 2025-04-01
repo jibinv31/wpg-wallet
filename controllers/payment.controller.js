@@ -20,56 +20,106 @@ const findRecipientAccount = async (email, accountNumber) => {
   return { id: doc.id, ...doc.data() };
 };
 
-export const processTransfer = async (req, res) => {
-  const userId = req.session.user.uid;
-  const { sourceAccount, recipientEmail, recipientAccountNumber, amount, note } = req.body;
 
-  const transferAmount = parseFloat(amount);
-  if (!transferAmount || transferAmount <= 0) {
-    return res.status(400).send("Invalid transfer amount.");
-  }
+// Simulate delay (e.g., 1 minute) before updating status
+const simulateTransferSuccess = async (transferId, sourceAccountId, currentBalance, amount) => {
+  
+  console.log(`⏳ Simulating delayed transfer success for ${transferId}...`);
+
+  setTimeout(async () => {
+    try {
+      const transferDoc = await db.collection("transfers").doc(transferId).get();
+      if (!transferDoc.exists) return;
+
+      const transfer = transferDoc.data();
+
+      // ✅ 1. Mark transfer as success
+      await db.collection("transfers").doc(transferId).update({
+        status: "success",
+        completedAt: new Date().toISOString(),
+      });
+
+      // ✅ 2. Deduct from sender
+      await db.collection("linked_banks").doc(sourceAccountId).update({
+        balance: currentBalance - amount,
+      });
+
+      // ✅ 3. Credit to recipient (if found)
+      const recipientSnap = await db
+        .collection("linked_banks")
+        .where("userEmail", "==", transfer.recipientEmail)
+        .where("accountNumber", "==", transfer.to)
+        .get();
+
+      if (!recipientSnap.empty) {
+        const recipientDoc = recipientSnap.docs[0];
+        const recipientData = recipientDoc.data();
+
+        await db.collection("linked_banks").doc(recipientDoc.id).update({
+          balance: recipientData.balance + amount,
+        });
+
+        console.log(`✅ Credited $${amount} to ${transfer.recipientEmail}`);
+      } else {
+        console.log("⚠️ Recipient not found – skipping credit.");
+      }
+
+      console.log(`✅ Transfer ${transferId} completed.`);
+    } catch (error) {
+      console.error("❌ Error during transfer finalization:", error.message);
+    }
+  }, 60000); // 1 minute delay
+};
+
+
+
+
+export const processTransfer = async (req, res) => {
+  const { sourceAccount, recipientEmail, recipientAccountNumber, amount, note } = req.body;
+  const uid = req.session.user.uid;
 
   try {
-    const senderBank = await getLinkedBankById(userId, sourceAccount);
-    if (!senderBank) return res.status(400).send("Invalid source account.");
-
-    if (senderBank.balance < transferAmount) {
-      return res.status(400).send("Insufficient funds.");
+    const transferAmount = parseFloat(amount);
+    if (!sourceAccount || !recipientEmail || !recipientAccountNumber || isNaN(transferAmount)) {
+      return res.status(400).send("Missing required transfer details.");
     }
 
-    const recipientBank = await findRecipientAccount(recipientEmail, recipientAccountNumber);
-    if (!recipientBank) {
-      return res.status(400).send("Recipient not found.");
+    // 🔍 Get source account by Firestore doc ID
+    const sourceDoc = await db.collection("linked_banks").doc(sourceAccount).get();
+
+    if (!sourceDoc.exists || sourceDoc.data().userId !== uid) {
+      return res.status(404).send("Source account not found.");
     }
 
-    const senderRef = db.collection("linked_banks").doc(senderBank.id);
-    const recipientRef = db.collection("linked_banks").doc(recipientBank.id);
-    const transactionRef = db.collection("transactions").doc();
+    const sourceData = sourceDoc.data();
 
-    // 🧾 Firestore batch
-    const batch = db.batch();
+    // 🛑 Ensure enough balance BEFORE creating transfer
+    if (transferAmount > sourceData.balance) {
+      return res.status(400).send("Insufficient balance.");
+    }
 
-    batch.update(senderRef, { balance: senderBank.balance - transferAmount });
-    batch.update(recipientRef, { balance: (recipientBank.balance || 0) + transferAmount });
-
-    batch.set(transactionRef, {
-      from: senderBank.accountNumber,
-      to: recipientBank.accountNumber,
-      senderEmail: req.session.user.email,
+    // ⏳ Create transfer record (processing)
+    const transferRef = await db.collection("transfers").add({
+      userId: uid,
+      from: sourceData.accountNumber,
+      fromAccountId: sourceAccount,
+      to: recipientAccountNumber,
       recipientEmail,
       amount: transferAmount,
-      note: note || "",
-      status: "Success",
-      date: new Date().toISOString(),
+      note,
+      status: "processing",
+      createdAt: new Date().toISOString(),
     });
 
-    await batch.commit();
+    // ✅ Only simulate balance deduction after success
+    simulateTransferSuccess(transferRef.id, sourceAccount, sourceData.balance, transferAmount);
 
-    console.log(`✅ Transfer of $${transferAmount} from ${senderBank.accountNumber} to ${recipientAccountNumber} completed.`);
-
-    res.redirect("/dashboard");
+    res.redirect("/transactions");
   } catch (err) {
-    console.error("❌ Transfer error:", err.message);
+    console.error("❌ Transfer Error:", err.message);
     res.status(500).send("Transfer failed.");
   }
 };
+
+
+

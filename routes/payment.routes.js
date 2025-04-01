@@ -30,4 +30,26 @@ router.get("/transfer", async (req, res) => {
 
 router.post("/payment-transfer", processTransfer);
 
+// Real-time verification API
+router.post("/verify-recipient", async (req, res) => {
+  const { email, accountNumber } = req.body;
+
+  try {
+    const snap = await db.collection("linked_banks")
+      .where("userEmail", "==", email)
+      .where("accountNumber", "==", accountNumber)
+      .get();
+
+    if (!snap.empty) {
+      res.json({ success: true });
+    } else {
+      res.json({ success: false });
+    }
+  } catch (err) {
+    console.error("❌ Verification error:", err.message);
+    res.status(500).json({ success: false });
+  }
+});
+
+
 export default router;
