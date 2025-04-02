@@ -28,7 +28,8 @@ const simulateTransferSuccess = async (
   currentBalance,
   amount,
   uid,
-  recipientEmail
+  recipientEmail,
+  senderEmail
 ) => {
 
   
@@ -79,6 +80,16 @@ const simulateTransferSuccess = async (
         });
 
         console.log(`✅ Credited $${amount} to ${transfer.recipientEmail}`);
+
+        // 5. Create recipient notification
+        // Assumes that the recipient's linked bank document contains a field 'userId'
+        await db.collection("notifications").add({
+          userId: recipientData.userId, // Recipient's user id
+          message: `💰 You received $${amount.toFixed(2)} from ${senderEmail} into account ****${transfer.to}.`,
+          type: "info",
+          read: false,
+          createdAt: new Date().toISOString(),
+        });
       } else {
         console.log("⚠️ Recipient not found – skipping credit.");
       }
@@ -146,7 +157,8 @@ export const processTransfer = async (req, res) => {
       sourceData.balance,
       transferAmount,
       uid,
-      recipientEmail
+      recipientEmail,
+      req.session.user.email || "unknown@example.com" // Use fallback if undefined
     );
     
 

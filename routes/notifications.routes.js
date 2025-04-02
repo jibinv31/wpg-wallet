@@ -12,6 +12,7 @@ router.get("/notifications", async (req, res) => {
       const snap = await db
         .collection("notifications")
         .where("userId", "==", user.uid)
+        .orderBy("createdAt", "desc")
         .get();
   
       const notifications = snap.docs.map(doc => ({
