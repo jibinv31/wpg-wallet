@@ -23,7 +23,7 @@ const findRecipientAccount = async (email, accountNumber) => {
 
 // Simulate delay (e.g., 1 minute) before updating status
 const simulateTransferSuccess = async (transferId, sourceAccountId, currentBalance, amount) => {
-  
+
   console.log(`⏳ Simulating delayed transfer success for ${transferId}...`);
 
   setTimeout(async () => {
@@ -114,7 +114,9 @@ export const processTransfer = async (req, res) => {
     // ✅ Only simulate balance deduction after success
     simulateTransferSuccess(transferRef.id, sourceAccount, sourceData.balance, transferAmount);
 
-    res.redirect("/transactions");
+    // res.redirect("/transactions");
+    res.json({ success: true });
+
   } catch (err) {
     console.error("❌ Transfer Error:", err.message);
     res.status(500).send("Transfer failed.");

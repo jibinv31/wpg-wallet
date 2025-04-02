@@ -20,7 +20,7 @@
     <main class="flex-grow-1 p-4">
       <h3 class="mb-4">Payment Transfer</h3>
 
-      <form action="/payment-transfer" method="POST">
+      <form id="transferForm" action="/payment-transfer" method="POST">
         <!-- Source Bank -->
         <div class="mb-3">
           <label for="sourceAccount" class="form-label">Select Source Bank</label>
@@ -88,13 +88,28 @@
           <input type="number" step="0.01" min="0" class="form-control" name="amount" id="amount" required>
         </div>
 
-        <button type="submit" class="btn btn-primary w-100">Transfer Funds</button>
+        <button type="submit" class="btn btn-primary w-100" id="submitBtn" disabled>Transfer Funds</button>
+
       </form>
     </main>
   </div>
 
   <!-- Footer -->
   <%- include('partials/footer') %>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- ✅ Transfer Success Modal -->
+  <div class="modal fade" id="transferModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content text-center">
+        <div class="modal-body p-4">
+          <h5 class="mb-3">✅ Transfer Successful!</h5>
+          <p>Redirecting to transaction history...</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
     const emailInput = document.getElementById("recipientEmail");
@@ -103,12 +118,18 @@ const emailStatus = document.getElementById("emailStatus");
 const accountStatus = document.getElementById("accountStatus");
 const purposeSelect = document.getElementById("purpose");
     const customNoteWrapper = document.getElementById("customNoteWrapper");
+    const submitBtn = document.getElementById("submitBtn");
+
+let isVerified = false;
 
 const verifyRecipient = async () => {
   const email = emailInput.value.trim();
   const accountNumber = accInput.value.trim();
 
-  if (!email || !accountNumber) return;
+  if (!email || !accountNumber) {
+    submitBtn.disabled = true;
+    return;
+  }
 
   const res = await fetch("/verify-recipient", {
     method: "POST",
@@ -121,14 +142,26 @@ const verifyRecipient = async () => {
   if (success) {
     emailStatus.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
     accountStatus.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
+    isVerified = true;
   } else {
     emailStatus.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i>';
     accountStatus.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i>';
+    isVerified = false;
   }
+  submitBtn.disabled = !isVerified;
 };
 
 emailInput.addEventListener("blur", verifyRecipient);
 accInput.addEventListener("blur", verifyRecipient);
+
+emailInput.addEventListener("input", () => {
+  isVerified = false;
+  submitBtn.disabled = true;
+});
+accInput.addEventListener("input", () => {
+  isVerified = false;
+  submitBtn.disabled = true;
+});
 
 // Show/hide custom note if "Other" selected
 purposeSelect.addEventListener("change", () => {
@@ -138,6 +171,29 @@ purposeSelect.addEventListener("change", () => {
       } else {
         customNoteWrapper.classList.add("d-none");
         document.getElementById("customNote").removeAttribute("name");
+      }
+    });
+
+    // Intercept form submit to show modal
+    document.getElementById("transferForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const payload = Object.fromEntries(formData.entries());
+
+      const res = await fetch("/payment-transfer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        const modal = new bootstrap.Modal(document.getElementById("transferModal"));
+        modal.show();
+        setTimeout(() => {
+          window.location.href = "/transactions";
+        }, 3000);
+      } else {
+        alert("Transfer failed. Please check the details and try again.");
       }
     });
 
