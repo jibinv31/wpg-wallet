@@ -22,8 +22,16 @@ const findRecipientAccount = async (email, accountNumber) => {
 
 
 // Simulate delay (e.g., 1 minute) before updating status
-const simulateTransferSuccess = async (transferId, sourceAccountId, currentBalance, amount) => {
+const simulateTransferSuccess = async (
+  transferId,
+  sourceAccountId,
+  currentBalance,
+  amount,
+  uid,
+  recipientEmail
+) => {
 
+  
   console.log(`⏳ Simulating delayed transfer success for ${transferId}...`);
 
   setTimeout(async () => {
@@ -38,6 +46,17 @@ const simulateTransferSuccess = async (transferId, sourceAccountId, currentBalan
         status: "success",
         completedAt: new Date().toISOString(),
       });
+
+        // ✅ Create success notification
+        await db.collection("notifications").add({
+          userId: uid,
+          message: `✅ Transfer of $${amount.toFixed(2)} to ${recipientEmail} completed successfully.`,
+          type: "success",
+          read: false,
+          createdAt: new Date().toISOString(),
+        });
+  
+        console.log(`✅ Transfer ${transferId} marked as SUCCESS`);
 
       // ✅ 2. Deduct from sender
       await db.collection("linked_banks").doc(sourceAccountId).update({
@@ -111,8 +130,25 @@ export const processTransfer = async (req, res) => {
       createdAt: new Date().toISOString(),
     });
 
+        // ✅ Create initial notification
+        await db.collection("notifications").add({
+          userId: uid,
+          message: `💸 Transfer of $${transferAmount.toFixed(2)} to ${recipientEmail} initiated.`,
+          type: "info",
+          read: false,
+          createdAt: new Date().toISOString(),
+        });
+
     // ✅ Only simulate balance deduction after success
-    simulateTransferSuccess(transferRef.id, sourceAccount, sourceData.balance, transferAmount);
+    simulateTransferSuccess(
+      transferRef.id,
+      sourceAccount,
+      sourceData.balance,
+      transferAmount,
+      uid,
+      recipientEmail
+    );
+    
 
     // res.redirect("/transactions");
     res.json({ success: true });

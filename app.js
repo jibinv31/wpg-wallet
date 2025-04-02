@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import transactionRoutes from "./routes/transactions.routes.js";
-
+import notificationRoutes from "./routes/notifications.routes.js";
 
 // 📦 Load environment variables
 dotenv.config();
@@ -52,7 +52,7 @@ app.use("/", bankacRoutes);
 app.use("/plaid", plaidRoutes); // ✅ Plaid integration with prefix
 app.use("/", paymentRoutes);
 app.use("/", transactionRoutes);
-
+app.use("/", notificationRoutes);
 
 // 🔁 Default route
 app.get("/", (req, res) => {
