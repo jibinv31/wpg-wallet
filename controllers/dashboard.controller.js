@@ -1,23 +1,26 @@
+// controllers/dashboard.controller.js
 import { getAccountsByUser } from "../models/plaid.model.js";
 import { db } from "../services/firebase.js";
+import { decrypt } from "../utils/encryption.js";
+import { plaidClient } from "../services/plaid.js";
 
 export const renderDashboard = async (req, res) => {
   const uid = req.session?.user?.uid;
   const user = req.session.user;
-
   if (!uid) return res.redirect("/login");
 
   try {
-    // Manual accounts
     const manualAccounts = await getAccountsByUser(uid);
 
-    // Plaid-linked accounts
     const plaidSnap = await db
       .collection("linked_banks")
       .where("userId", "==", uid)
       .get();
 
-    const plaidAccounts = plaidSnap.docs.map(doc => doc.data());
+    const plaidAccounts = plaidSnap.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
 
     const accountCount = manualAccounts.length + plaidAccounts.length;
     const totalBalance = manualAccounts.reduce(
@@ -25,28 +28,53 @@ export const renderDashboard = async (req, res) => {
       0
     );
 
-    // 🕒 Get ALL transactions and manually filter last 7 days
-    const allTxnSnap = await db
-      .collection("transactions")
+    // 🕒 Date filter: last 10 days
+    const now = new Date();
+    const tenDaysAgo = new Date(now);
+    tenDaysAgo.setDate(now.getDate() - 10);
+
+    // 🔹 Fetch manual transactions
+    const manualSnap = await db
+      .collection("transfers")
       .where("userId", "==", uid)
-      .orderBy("date", "desc")
-      .limit(50)
       .get();
 
-    const allTxns = allTxnSnap.docs.map(doc => doc.data());
-    console.log("📦 ALL Firestore transactions:", allTxns.length);
+    const manualTransactions = manualSnap.docs
+      .map(doc => doc.data())
+      .filter(t => new Date(t.createdAt) >= tenDaysAgo)
+      .map(t => ({
+        date: t.createdAt,
+        name: `Transfer to ${t.recipientEmail}`,
+        amount: -Math.abs(t.amount),
+        category: ["Manual Transfer"],
+        status: t.status || "success"
+      }));
 
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    // 🔹 Fetch Plaid transactions
+    const plaidTransactions = [];
+    for (const bank of plaidAccounts) {
+      try {
+        const accessToken = decrypt(bank.accessToken);
+        const plaidRes = await plaidClient.transactionsGet({
+          access_token: accessToken,
+          start_date: tenDaysAgo.toISOString().split("T")[0],
+          end_date: now.toISOString().split("T")[0],
+        });
 
-    const recentTransactions = allTxns
-      .filter(txn => {
-        const txnDate = new Date(txn.date);
-        return txnDate >= sevenDaysAgo;
-      })
-      .slice(0, 5); // Show max 5
+        plaidRes.data.transactions.forEach(txn => {
+          plaidTransactions.push({ ...txn, status: "posted" });
+        });
+      } catch (err) {
+        console.warn(`⚠️ Error fetching from Plaid (${bank.institution}):`, err.message);
+      }
+    }
 
-    console.log("📥 Recent transactions found:", recentTransactions.length);
+    // 🔄 Combine & sort
+    const recentTransactions = [...manualTransactions, ...plaidTransactions]
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 5);
+
+    console.log("📥 Total recent transactions shown:", recentTransactions.length);
 
     res.render("dashboard", {
       user,
@@ -56,6 +84,7 @@ export const renderDashboard = async (req, res) => {
       recentTransactions,
       currentRoute: "dashboard"
     });
+
   } catch (error) {
     console.error("❌ Dashboard error:", error.message);
     res.status(500).send("Something went wrong.");
