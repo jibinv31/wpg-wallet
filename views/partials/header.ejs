@@ -3,9 +3,8 @@
 
   <% if (user) { %>
     <div class="d-flex align-items-center gap-3">
-      <!-- Notification Bell Icon -->
       <a href="/notifications" class="btn btn-outline-secondary btn-sm position-relative">
-        <i class="bi bi-bell-fill"></i>
+        <i class="bi bi-bell-fill fs-5"></i>
         <% if (typeof notificationCount !== 'undefined' && notificationCount > 0) { %>
           <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
             <%= notificationCount %>
@@ -15,5 +14,6 @@
       </a>
       <a href="/logout" class="btn btn-outline-danger btn-sm">Sign Out</a>
     </div>
+    
   <% } %>
 </nav>

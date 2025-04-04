@@ -48,12 +48,29 @@ export const renderDashboard = async (req, res) => {
 
     console.log("📥 Recent transactions found:", recentTransactions.length);
 
+     // Get unread notifications count
+     const notificationSnap = await db
+     .collection("notifications")
+     .where("userId", "==", uid)
+     .where("read", "==", false)
+     .get();
+   const notificationCount = notificationSnap.size;
+   console.log("📬 Notification Count:", notificationCount);
+
+   // Mark them as read (you can do this in a batch update)
+   const batch = db.batch();
+   notificationSnap.docs.forEach(doc => {
+     batch.update(doc.ref, { read: true });
+   });
+   await batch.commit();
+
     res.render("dashboard", {
       user,
       accounts: plaidAccounts,
       totalBalance,
       accountCount,
       recentTransactions,
+      notificationCount,
       currentRoute: "dashboard"
     });
   } catch (error) {

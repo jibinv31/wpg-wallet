@@ -7,7 +7,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import transactionRoutes from "./routes/transactions.routes.js";
 import notificationRoutes from "./routes/notifications.routes.js";
-
+import { setNotificationCount } from "./middleware/notificationCount.js";
 // 📦 Load environment variables
 dotenv.config();
 
@@ -53,6 +53,7 @@ app.use("/plaid", plaidRoutes); // ✅ Plaid integration with prefix
 app.use("/", paymentRoutes);
 app.use("/", transactionRoutes);
 app.use("/", notificationRoutes);
+app.use(setNotificationCount);
 
 // 🔁 Default route
 app.get("/", (req, res) => {
