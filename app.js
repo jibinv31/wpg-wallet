@@ -44,6 +44,8 @@ app.use(
     })
 );
 
+app.use(setNotificationCount);
+
 // 🌐 Routes
 app.use("/", authRoutes);
 app.use("/", dashboardRoutes);
