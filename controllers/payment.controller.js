@@ -32,7 +32,7 @@ const simulateTransferSuccess = async (
   senderEmail
 ) => {
 
-  
+
   console.log(`⏳ Simulating delayed transfer success for ${transferId}...`);
 
   setTimeout(async () => {
@@ -48,16 +48,16 @@ const simulateTransferSuccess = async (
         completedAt: new Date().toISOString(),
       });
 
-        // ✅ Create success notification
-        await db.collection("notifications").add({
-          userId: uid,
-          message: `✅ Transfer of $${amount.toFixed(2)} to ${recipientEmail} completed successfully.`,
-          type: "success",
-          read: false,
-          createdAt: new Date().toISOString(),
-        });
-  
-        console.log(`✅ Transfer ${transferId} marked as SUCCESS`);
+      // ✅ Create success notification
+      await db.collection("notifications").add({
+        userId: uid,
+        message: `✅ Transfer of $${amount.toFixed(2)} to ${recipientEmail} completed successfully.`,
+        type: "success",
+        read: false,
+        createdAt: new Date().toISOString(),
+      });
+
+      console.log(`✅ Transfer ${transferId} marked as SUCCESS`);
 
       // ✅ 2. Deduct from sender
       await db.collection("linked_banks").doc(sourceAccountId).update({
@@ -141,14 +141,14 @@ export const processTransfer = async (req, res) => {
       createdAt: new Date().toISOString(),
     });
 
-        // ✅ Create initial notification
-        await db.collection("notifications").add({
-          userId: uid,
-          message: `💸 Transfer of $${transferAmount.toFixed(2)} to ${recipientEmail} initiated.`,
-          type: "info",
-          read: false,
-          createdAt: new Date().toISOString(),
-        });
+    // ✅ Create initial notification
+    await db.collection("notifications").add({
+      userId: uid,
+      message: `💸 Transfer of $${transferAmount.toFixed(2)} to ${recipientEmail} initiated.`,
+      type: "info",
+      read: false,
+      createdAt: new Date().toISOString(),
+    });
 
     // ✅ Only simulate balance deduction after success
     simulateTransferSuccess(
@@ -160,7 +160,7 @@ export const processTransfer = async (req, res) => {
       recipientEmail,
       req.session.user.email || "unknown@example.com" // Use fallback if undefined
     );
-    
+
 
     // res.redirect("/transactions");
     res.json({ success: true });
