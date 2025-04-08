@@ -23,7 +23,7 @@ const isSuperAdmin = async (req, res, next) => {
 
 // 🔐 Admin dashboard and actions
 router.get("/admin-dashboard", isSuperAdmin, getUnvalidatedUsers);
-router.post("/admin/validate/:userId", isSuperAdmin, approveUser);
-router.post("/admin/reject/:userId", isSuperAdmin, rejectUser); // 🚫 reject route added
+router.post("/admin/approve/:userId", isSuperAdmin, approveUser); // ✅ updated
+router.post("/admin/reject/:userId", isSuperAdmin, rejectUser);
 
 export default router;
