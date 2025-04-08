@@ -1,35 +1,50 @@
-import { admin, db } from "../services/firebase.js";
+import { admin, db, storage } from "../services/firebase.js";
 import { getUserById, createUser } from "../models/user.model.js";
+import { v4 as uuidv4 } from "uuid";
+import path from "path";
+import multer from "multer";
+import os from "os";
+import fs from "fs";
 
+// ✅ Session Login (handles both normal users and super admins)
 export const sessionLogin = async (req, res) => {
     const { idToken, name } = req.body;
-    console.log("📥 Received ID token for session login");
+    console.log("📥 Received session login request...");
 
     try {
         const decodedToken = await admin.auth().verifyIdToken(idToken);
         const uid = decodedToken.uid;
         const email = decodedToken.email;
-        console.log(`✅ Token verified for user: ${email} (UID: ${uid})`);
 
-        let user = await getUserById(uid);
+        console.log(`✅ Verified token for user: ${email} (UID: ${uid})`);
 
-        if (!user) {
-            if (!name || name.trim() === "") {
-                console.warn("⚠️ Missing name for new user. Cannot create Firestore user.");
-                return res.status(400).json({ error: "Name is required for new user creation." });
-            }
+        // 🔍 Check if user is super admin
+        const superAdminSnap = await db.collection("super_admins").doc(uid).get();
+        const isSuperAdmin = superAdminSnap.exists;
 
-            console.log("🆕 Creating new Firestore user...");
-            await createUser(uid, {
-                name: name.trim(),
+        if (isSuperAdmin) {
+            req.session.user = {
+                uid,
                 email,
-                balance: 1000,
-                createdAt: new Date().toISOString(),
-            });
+                name: name || "Super Admin"
+            };
 
-            user = { name: name.trim(), email };
-        } else {
-            console.log("📦 Firestore user doc already exists");
+            console.log("🔐 Super admin logged in.");
+            return res.status(200).json({
+                message: "Super admin session created",
+                redirect: "/admin-dashboard"
+            });
+        }
+
+        // 🔐 Check if regular user exists in Firestore
+        const user = await getUserById(uid);
+        if (!user) {
+            return res.status(403).json({ error: "Please complete full signup with KYC document." });
+        }
+
+        // ✅ Flexible logic: allow older users with no 'isValidated' flag
+        if (user.isValidated === false) {
+            return res.status(403).json({ error: "User not yet validated by admin." });
         }
 
         req.session.user = {
@@ -38,21 +53,100 @@ export const sessionLogin = async (req, res) => {
             name: user.name || name || "User"
         };
 
-        return res.status(200).json({ message: "Session created" });
+        return res.status(200).json({
+            message: "Session created",
+            redirect: "/dashboard"
+        });
+
     } catch (error) {
-        console.error("❌ Error verifying token or creating session:", error.message);
+        console.error("❌ Session login error:", error.message);
         return res.status(401).json({ error: "Unauthorized" });
     }
 };
 
+// ✅ Signup + KYC Document Upload
+export const handleSignup = async (req, res) => {
+    try {
+        const {
+            idToken,
+            name,
+            email,
+            dob,
+            ssn,
+            address,
+            postalCode,
+            state
+        } = req.body;
+
+        const file = req.file;
+        if (!file) {
+            return res.status(400).json({ error: "KYC document is required." });
+        }
+
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        const uid = decodedToken.uid;
+
+        const existing = await getUserById(uid);
+        if (existing) {
+            return res.status(400).json({ error: "User already exists." });
+        }
+
+        // 📁 Upload KYC document to Firebase Storage
+        const ext = path.extname(file.originalname);
+        const uniqueName = `kyc_docs/${uid}_${uuidv4()}${ext}`;
+        const firebaseFile = storage.file(uniqueName);
+
+        await firebaseFile.save(fs.readFileSync(file.path), {
+            metadata: {
+                contentType: file.mimetype,
+                metadata: {
+                    firebaseStorageDownloadTokens: uuidv4()
+                }
+            }
+        });
+
+        const [url] = await firebaseFile.getSignedUrl({
+            action: "read",
+            expires: "03-01-2030"
+        });
+
+        // 🧹 Delete temp file
+        fs.unlink(file.path, (err) => {
+            if (err) console.warn("⚠️ Could not delete temp file:", file.path);
+        });
+
+        // 🧾 Save user to Firestore
+        await createUser(uid, {
+            name,
+            email,
+            dob,
+            ssn,
+            address,
+            postalCode,
+            state,
+            isValidated: false,
+            documentUrl: url,
+            createdAt: new Date().toISOString()
+        });
+
+        console.log("✅ User and document stored. Awaiting admin validation.");
+        res.status(200).json({ message: "Signup completed. Awaiting admin validation." });
+
+    } catch (err) {
+        console.error("❌ Signup error:", err.message);
+        res.status(500).json({ error: "Signup failed." });
+    }
+};
+
+// 🔴 Logout
 export const logout = (req, res) => {
-    console.log("👋 Logging out user...");
+    console.log("👋 Logging out...");
     req.session.destroy((err) => {
         if (err) {
-            console.error("❌ Error destroying session:", err.message);
+            console.error("❌ Logout error:", err.message);
             return res.status(500).send("Logout error");
         }
-        console.log("✅ Session destroyed. Redirecting to login.");
+        console.log("✅ Session destroyed.");
         res.redirect("/login");
     });
 };

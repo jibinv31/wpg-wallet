@@ -1,8 +1,19 @@
 import express from "express";
-import { sessionLogin, logout } from "../controllers/auth.controller.js";
+import multer from "multer";
+import os from "os";
+import {
+    sessionLogin,
+    logout,
+    handleSignup
+} from "../controllers/auth.controller.js";
+import { renderDashboard } from "../controllers/dashboard.controller.js"; // ✅ Imported here
+
 const router = express.Router();
 
-// 🧠 Middleware to protect routes
+// ✅ Multer setup (temporary file storage)
+const upload = multer({ dest: os.tmpdir() });
+
+// 🧠 Session check middleware
 const requireAuth = (req, res, next) => {
     if (!req.session.user) {
         return res.redirect("/login");
@@ -10,7 +21,7 @@ const requireAuth = (req, res, next) => {
     next();
 };
 
-// 🧠 Signup/Login Views
+// 🧾 Auth pages
 router.get("/signup", (req, res) => {
     console.log("🧾 GET /signup page rendered");
     res.render("signup");
@@ -21,14 +32,12 @@ router.get("/login", (req, res) => {
     res.render("login");
 });
 
-// ✅ Protected Dashboard route
-// router.get("/dashboard", requireAuth, (req, res) => {
-//     console.log("🧾 GET /dashboard page rendered");
-//     res.render("dashboard", { user: req.session.user });
-// });
-
-// 🔐 Auth routes
+// 🔐 Auth APIs
+router.post("/signup", upload.single("kycDocument"), handleSignup);
 router.post("/sessionLogin", sessionLogin);
 router.get("/logout", logout);
+
+// ✅ Protected Dashboard (use controller)
+router.get("/dashboard", requireAuth, renderDashboard); // ✅ Fixed here
 
 export default router;

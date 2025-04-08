@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 import transactionRoutes from "./routes/transactions.routes.js";
 import notificationRoutes from "./routes/notifications.routes.js";
 import { setNotificationCount } from "./middleware/notificationCount.js";
+import adminRoutes from "./routes/admin.routes.js";
 // 📦 Load environment variables
 dotenv.config();
 
@@ -56,6 +57,7 @@ app.use("/", paymentRoutes);
 app.use("/", transactionRoutes);
 app.use("/", notificationRoutes);
 app.use(setNotificationCount);
+app.use(adminRoutes);
 
 // 🔁 Default route
 app.get("/", (req, res) => {

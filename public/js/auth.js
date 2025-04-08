@@ -32,15 +32,17 @@ if (loginForm) {
                 body: JSON.stringify({ idToken })
             });
 
+            const data = await res.json();
+
             if (res.ok) {
                 loginForm.classList.add("d-none");
                 loginSpinner.classList.remove("d-none");
 
                 setTimeout(() => {
-                    window.location.href = "/dashboard";
+                    window.location.href = data.redirect || "/dashboard";
                 }, 1000);
             } else {
-                alert("Login failed. Please try again.");
+                alert(data.error || "Login failed. Please try again.");
             }
         } catch (err) {
             console.error("Login Error:", err.message);
@@ -49,7 +51,7 @@ if (loginForm) {
     });
 }
 
-// 🚀 Handle Signup with Validation + Spinner + Sign-out + Redirect to Login
+// 🚀 Handle Signup + KYC Upload
 const signupForm = document.getElementById("signupForm");
 const redirectSpinner = document.getElementById("redirectSpinner");
 
@@ -57,12 +59,13 @@ if (signupForm) {
     signupForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const firstName = document.getElementById("firstName")?.value.trim();
-        const lastName = document.getElementById("lastName")?.value.trim();
-        const email = document.getElementById("email")?.value.trim();
-        const password = document.getElementById("password")?.value;
-
-        const name = `${firstName || ""} ${lastName || ""}`.trim();
+        const formData = new FormData(signupForm);
+        const firstName = formData.get("firstName")?.trim();
+        const lastName = formData.get("lastName")?.trim();
+        const name = `${firstName} ${lastName}`.trim();
+        const email = formData.get("email")?.trim();
+        const password = formData.get("password");
+        const kycDocument = formData.get("kycDocument");
 
         if (!firstName || !lastName || !name) {
             alert("Please enter your full name.");
@@ -78,7 +81,12 @@ if (signupForm) {
         }
 
         if (!passwordPattern.test(password)) {
-            alert("Password must be at least 8 characters long, include an uppercase letter, a number, and a special character.");
+            alert("Password must be at least 8 characters, include uppercase, number, and special char.");
+            return;
+        }
+
+        if (!kycDocument || kycDocument.size === 0) {
+            alert("Please upload a valid KYC document.");
             return;
         }
 
@@ -86,13 +94,16 @@ if (signupForm) {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const idToken = await userCredential.user.getIdToken();
 
-            const res = await fetch("/sessionLogin", {
+            // Append token + name to formData
+            formData.append("idToken", idToken);
+            formData.append("name", name);
+
+            const res = await fetch("/signup", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ idToken, name })
+                body: formData
             });
 
-            if (!res.ok) throw new Error("Session creation failed");
+            if (!res.ok) throw new Error("Signup failed on server");
 
             await auth.signOut();
 
@@ -101,25 +112,23 @@ if (signupForm) {
 
             setTimeout(() => {
                 window.location.href = "/login";
-            }, 1000);
+            }, 1500);
         } catch (err) {
             console.error("Signup Error:", err);
-      
-            if (err.code === "auth/email-already-in-use") {
-              alert("An account with this email already exists. Redirecting to login...");
-              setTimeout(() => {
-                window.location.href = "/login";
-              }, 2000);
-            } else if (err.code === "auth/weak-password") {
-              alert("Password is too weak. Use at least 8 characters, an uppercase letter, a number, and a symbol.");
-            } else {
-              alert("Signup failed. Please try again.");
-            }
-          }
-        });
-      }
 
-// 🚀 Google Sign-In (✅ Fixed to send name properly)
+            if (err.code === "auth/email-already-in-use") {
+                alert("Email already exists. Redirecting to login...");
+                setTimeout(() => {
+                    window.location.href = "/login";
+                }, 2000);
+            } else {
+                alert("Signup failed. Try again.");
+            }
+        }
+    });
+}
+
+// 🚀 Google Sign-In
 const googleBtn = document.getElementById("googleLogin");
 if (googleBtn) {
     googleBtn.addEventListener("click", async () => {
@@ -131,13 +140,15 @@ if (googleBtn) {
             const res = await fetch("/sessionLogin", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ idToken, name }) // ✅ Sending name now!
+                body: JSON.stringify({ idToken, name })
             });
 
+            const data = await res.json();
+
             if (res.ok) {
-                window.location.href = "/dashboard";
+                window.location.href = data.redirect || "/dashboard";
             } else {
-                alert("Google login failed. Try again.");
+                alert(data.error || "Google login failed. Try again.");
             }
         } catch (err) {
             console.error("Google Login Error:", err.message);
@@ -145,4 +156,3 @@ if (googleBtn) {
         }
     });
 }
-
