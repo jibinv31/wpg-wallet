@@ -76,7 +76,7 @@ export const renderDashboard = async (req, res) => {
 
     console.log("📥 Total recent transactions shown:", recentTransactions.length);
 
-    // Get unread notifications count
+    // 🔔 Get unread notifications count
     const notificationSnap = await db
       .collection("notifications")
       .where("userId", "==", uid)
@@ -85,7 +85,7 @@ export const renderDashboard = async (req, res) => {
     const notificationCount = notificationSnap.size;
     console.log("📬 Notification Count:", notificationCount);
 
-    // Mark them as read (you can do this in a batch update)
+    // ✅ Mark notifications as read
     const batch = db.batch();
     notificationSnap.docs.forEach(doc => {
       batch.update(doc.ref, { read: true });
@@ -105,5 +105,22 @@ export const renderDashboard = async (req, res) => {
   } catch (error) {
     console.error("❌ Dashboard error:", error.message);
     res.status(500).send("Something went wrong.");
+  }
+};
+
+// ✅ Fixed Profile Page Controller
+export const renderProfile = async (req, res) => {
+  const uid = req.session?.user?.uid;
+  if (!uid) return res.redirect("/login");
+
+  try {
+    res.render("profile", {
+      user: req.session.user, // ✅ Use session-stored, decrypted values
+      currentRoute: "profile"
+    });
+
+  } catch (error) {
+    console.error("❌ Error loading profile:", error.message);
+    res.status(500).send("Error loading profile page.");
   }
 };
