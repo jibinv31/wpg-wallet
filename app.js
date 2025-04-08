@@ -59,7 +59,7 @@ app.use(setNotificationCount);
 
 // 🔁 Default route
 app.get("/", (req, res) => {
-    res.redirect("/login");
+    res.redirect("/landing");
 });
 
 // 🚀 Start Server

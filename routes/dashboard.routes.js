@@ -7,4 +7,8 @@ const router = express.Router();
 // Route: GET /dashboard
 router.get("/dashboard", renderDashboard);
 
+router.get("/", (req, res) => {
+    res.render("landing"); // This renders views/landing.ejs
+  });
+
 export default router;
