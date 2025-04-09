@@ -38,3 +38,13 @@ export const updateUser = async (uid, data) => {
 
   await usersRef.doc(uid).update(encryptedData);
 };
+
+export const getUserByEmail = async (email) => {
+  const snap = await db.collection("users")
+    .where("email", "==", email)
+    .limit(1)
+    .get();
+
+  if (snap.empty) return null;
+  return snap.docs[0].data(); // or { id: doc.id, ...doc.data() } if you want ID
+};

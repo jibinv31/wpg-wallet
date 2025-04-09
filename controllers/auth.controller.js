@@ -5,64 +5,70 @@ import path from "path";
 import multer from "multer";
 import os from "os";
 import fs from "fs";
+import { sendOTPEmail } from "../utils/email.js";
+import { verifyOTPCode } from "../utils/otp.js";
+
 
 // ✅ Session Login (handles both normal users and super admins)
 export const sessionLogin = async (req, res) => {
-    const { idToken, name } = req.body;
+    const { idToken, name, otp } = req.body;
     console.log("📥 Received session login request...");
-
-    try {
-        const decodedToken = await admin.auth().verifyIdToken(idToken);
-        const uid = decodedToken.uid;
-        const email = decodedToken.email;
-
-        console.log(`✅ Verified token for user: ${email} (UID: ${uid})`);
-
-        // 🔍 Check if user is super admin
-        const superAdminSnap = await db.collection("super_admins").doc(uid).get();
-        const isSuperAdmin = superAdminSnap.exists;
-
-        if (isSuperAdmin) {
-            req.session.user = {
-                uid,
-                email,
-                name: name || "Super Admin"
-            };
-
-            console.log("🔐 Super admin logged in.");
-            return res.status(200).json({
-                message: "Super admin session created",
-                redirect: "/admin-dashboard"
-            });
-        }
-
-        // 🔐 Check if regular user exists in Firestore
-        const user = await getUserById(uid);
-        if (!user) {
-            return res.status(403).json({ error: "Please complete full signup with KYC document." });
-        }
-
-        // ✅ Flexible logic: allow older users with no 'isValidated' flag
-        if (user.isValidated === false) {
-            return res.status(403).json({ error: "User not yet validated by admin." });
-        }
-
-        req.session.user = {
-            uid,
-            email,
-            name: user.name || name || "User"
-        };
-
-        return res.status(200).json({
-            message: "Session created",
-            redirect: "/dashboard"
-        });
-
-    } catch (error) {
-        console.error("❌ Session login error:", error.message);
-        return res.status(401).json({ error: "Unauthorized" });
+  
+    if (!otp) {
+      return res.status(400).json({ error: "OTP is required" });
     }
-};
+  
+    try {
+      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      const uid = decodedToken.uid;
+      const email = decodedToken.email;
+  
+      console.log(`✅ Verified token for user: ${email} (UID: ${uid})`);
+  
+      // 🔐 Validate OTP for everyone
+      const isOTPValid = await verifyOTPCode(email, otp);
+      if (!isOTPValid) {
+        return res.status(401).json({ error: "Invalid OTP" });
+      }
+  
+      // 🔍 Check if super admin
+      const superAdminSnap = await db.collection("super_admins").doc(uid).get();
+      const isSuperAdmin = superAdminSnap.exists;
+  
+      if (isSuperAdmin) {
+        req.session.user = {
+          uid,
+          email,
+          name: name || "Super Admin"
+        };
+        console.log("🔐 Super admin logged in.");
+        return res.status(200).json({ message: "Super admin session created", redirect: "/admin-dashboard" });
+      }
+  
+      // 🔍 Validate regular user
+      const user = await getUserById(uid);
+      if (!user) {
+        return res.status(403).json({ error: "Please complete full signup with KYC document." });
+      }
+  
+      if (user.isValidated === false) {
+        return res.status(403).json({ error: "User not yet validated by admin." });
+      }
+  
+      req.session.user = {
+        uid,
+        email,
+        name: user.name || name || "User"
+      };
+  
+      console.log("✅ User session created.");
+      return res.status(200).json({ message: "Session created", redirect: "/dashboard" });
+  
+    } catch (error) {
+      console.error("❌ Session login error:", error.message);
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+  };
 
 // ✅ Signup + KYC Document Upload
 export const handleSignup = async (req, res) => {
