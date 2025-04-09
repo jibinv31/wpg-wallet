@@ -1,30 +1,43 @@
-<div class="d-flex flex-column flex-shrink-0 p-3 bg-light" style="width: 250px; height: 100vh;">
-  <ul class="nav nav-pills flex-column mb-auto">
-    <li class="nav-item">
-      <a href="/dashboard" class="nav-link <%= currentRoute === 'dashboard' ? 'active text-white' : 'text-dark' %>">🏠
-        Home</a>
-    </li>
-    <li>
-      <a href="/banks" class="nav-link <%= currentRoute === 'banks' ? 'active text-white' : 'text-dark' %>">🏦 My
-        Banks</a>
-    </li>
-    <li>
-      <a href="/transactions"
-        class="nav-link <%= currentRoute === 'transactions' ? 'active text-white' : 'text-dark' %>">📜 Transaction
-        History</a>
-    </li>
-    <li>
-      <a href="/transfer" class="nav-link <%= currentRoute === 'transfer' ? 'active text-white' : 'text-dark' %>">💸
-        Payment Transfer</a>
-    </li>
-    <!-- <li>
-      <a href="/add-bank" class="nav-link <%= currentRoute === 'add-bank' ? 'active text-white' : 'text-dark' %>">🔗
-        Connect Bank</a>
-    </li> -->
-    <!-- <li>
-      <a href="/notifications" class="nav-link <%= currentRoute === 'notifications' ? 'active text-white' : 'text-dark' %>">
-        🔔 Notifications
-      </a>
-    </li> -->
-  </ul>
+<div class="d-flex flex-column flex-shrink-0 p-3 bg-light justify-content-between" style="width: 250px; height: 100vh;">
+  <div>
+    <ul class="nav nav-pills flex-column mb-auto">
+      <li class="nav-item">
+        <a href="/dashboard" class="nav-link <%= currentRoute === 'dashboard' ? 'active text-white' : 'text-dark' %>">🏠
+          Home</a>
+      </li>
+      <li>
+        <a href="/banks" class="nav-link <%= currentRoute === 'banks' ? 'active text-white' : 'text-dark' %>">🏦 My
+          Banks</a>
+      </li>
+      <li>
+        <a href="/transactions"
+          class="nav-link <%= currentRoute === 'transactions' ? 'active text-white' : 'text-dark' %>">📜 Transaction
+          History</a>
+      </li>
+      <li>
+        <a href="/transfer" class="nav-link <%= currentRoute === 'transfer' ? 'active text-white' : 'text-dark' %>">💸
+          Payment Transfer</a>
+      </li>
+
+      <!-- <li>
+        <a href="/add-bank" class="nav-link <%= currentRoute === 'add-bank' ? 'active text-white' : 'text-dark' %>">🔗
+          Connect Bank</a>
+      </li> -->
+      <!-- <li>
+        <a href="/notifications" class="nav-link <%= currentRoute === 'notifications' ? 'active text-white' : 'text-dark' %>">
+          🔔 Notifications
+        </a>
+      </li> -->
+    </ul>
+  </div>
+
+  <!-- 👤 Profile link at bottom -->
+  <div>
+    <ul class="nav flex-column">
+      <li>
+        <a href="/profile" class="nav-link <%= currentRoute === 'profile' ? 'active text-white' : 'text-dark' %>">👤
+          Profile</a>
+      </li>
+    </ul>
+  </div>
 </div>

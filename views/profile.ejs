@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile | WPG-Wallet</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .card-profile {
+            padding: 2rem;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            background-color: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .value {
+            color: #333;
+            word-break: break-word;
+        }
+
+        .profile-section {
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+
+<body class="d-flex flex-column" style="min-height: 100vh;">
+    <!-- Header -->
+    <%- include('partials/header', { user: user }) %>
+
+        <div class="d-flex flex-grow-1">
+            <%- include('partials/nav', { currentRoute: "profile" }) %>
+
+                <main class="flex-grow-1 p-4 bg-white">
+                    <h4 class="mb-4 text-primary">👤 Your Profile</h4>
+                    <div class="card-profile">
+                        <div class="row">
+                            <div class="col-md-6 profile-section">
+                                <div class="label">Full Name</div>
+                                <div class="value">
+                                    <%= user.name || 'N/A' %>
+                                </div>
+                            </div>
+                            <div class="col-md-6 profile-section">
+                                <div class="label">Email</div>
+                                <div class="value">
+                                    <%= user.email || 'N/A' %>
+                                </div>
+                            </div>
+                            <div class="col-md-6 profile-section">
+                                <div class="label">Date of Birth</div>
+                                <div class="value">
+                                    <%= user.dob || 'N/A' %>
+                                </div>
+                            </div>
+                            <div class="col-md-6 profile-section">
+                                <div class="label">SSN</div>
+                                <div class="value">
+                                    <%= user.ssn || 'N/A' %>
+                                </div>
+                            </div>
+                            <div class="col-md-6 profile-section">
+                                <div class="label">Address</div>
+                                <div class="value">
+                                    <%= user.address || 'N/A' %>
+                                </div>
+                            </div>
+                            <div class="col-md-6 profile-section">
+                                <div class="label">State</div>
+                                <div class="value">
+                                    <%= user.state || 'N/A' %>
+                                </div>
+                            </div>
+                            <div class="col-md-6 profile-section">
+                                <div class="label">Postal Code</div>
+                                <div class="value">
+                                    <%= user.postalCode || 'N/A' %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+        </div>
+
+        <!-- Footer -->
+        <%- include('partials/footer') %>
+</body>
+
+</html>

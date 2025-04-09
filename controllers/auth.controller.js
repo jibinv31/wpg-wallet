@@ -2,9 +2,8 @@ import { admin, db, storage } from "../services/firebase.js";
 import { getUserById, createUser } from "../models/user.model.js";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
-import multer from "multer";
-import os from "os";
 import fs from "fs";
+import { decrypt, encrypt } from "../utils/encryption.js";
 import { sendOTPEmail } from "../utils/email.js";
 import { verifyOTPCode } from "../utils/otp.js";
 
@@ -54,12 +53,31 @@ export const sessionLogin = async (req, res) => {
       if (user.isValidated === false) {
         return res.status(403).json({ error: "User not yet validated by admin." });
       }
+  // ✅ Decrypt before saving to session
+  const decryptedSSN = user.ssn ? decrypt(user.ssn) : null;
+  const decryptedAddress = user.address ? decrypt(user.address) : null;
+  const decryptedPostalCode = user.postalCode ? decrypt(user.postalCode) : null;
+  const decryptedState = user.state ? decrypt(user.state) : null;
+
+  console.log("🔓 Decrypted values for session:", {
+      decryptedSSN,
+      decryptedAddress,
+      decryptedPostalCode,
+      decryptedState
+  });
+
   
-      req.session.user = {
-        uid,
-        email,
-        name: user.name || name || "User"
-      };
+  req.session.user = {
+    uid,
+    email,
+    name: user.name || name || "User",
+    dob: user.dob || "N/A",
+    ssn: decryptedSSN ? "****" + decryptedSSN.slice(-2) : "N/A",
+    decryptedSSN: decryptedSSN || "N/A",
+    address: decryptedAddress || "N/A",
+    postalCode: decryptedPostalCode || "N/A",
+    state: decryptedState || "N/A"
+};
   
       console.log("✅ User session created.");
       return res.status(200).json({ message: "Session created", redirect: "/dashboard" });
@@ -75,7 +93,8 @@ export const handleSignup = async (req, res) => {
     try {
         const {
             idToken,
-            name,
+            firstName,
+            lastName,
             email,
             dob,
             ssn,
@@ -84,20 +103,17 @@ export const handleSignup = async (req, res) => {
             state
         } = req.body;
 
+        const name = `${firstName} ${lastName}`;
+
         const file = req.file;
-        if (!file) {
-            return res.status(400).json({ error: "KYC document is required." });
-        }
+        if (!file) return res.status(400).json({ error: "KYC document is required." });
 
         const decodedToken = await admin.auth().verifyIdToken(idToken);
         const uid = decodedToken.uid;
 
         const existing = await getUserById(uid);
-        if (existing) {
-            return res.status(400).json({ error: "User already exists." });
-        }
+        if (existing) return res.status(400).json({ error: "User already exists." });
 
-        // 📁 Upload KYC document to Firebase Storage
         const ext = path.extname(file.originalname);
         const uniqueName = `kyc_docs/${uid}_${uuidv4()}${ext}`;
         const firebaseFile = storage.file(uniqueName);
@@ -116,20 +132,32 @@ export const handleSignup = async (req, res) => {
             expires: "03-01-2030"
         });
 
-        // 🧹 Delete temp file
         fs.unlink(file.path, (err) => {
             if (err) console.warn("⚠️ Could not delete temp file:", file.path);
         });
 
-        // 🧾 Save user to Firestore
-        await createUser(uid, {
+        console.log("🔐 Raw values before encryption:", {
             name,
-            email,
             dob,
             ssn,
             address,
             postalCode,
-            state,
+            state
+        });
+
+        const encryptedAddress = encrypt(address);
+        const encryptedPostalCode = encrypt(postalCode);
+        const encryptedSSN = encrypt(ssn);
+        const encryptedState = encrypt(state);
+
+        await createUser(uid, {
+            name,
+            email,
+            dob,
+            ssn: encryptedSSN,
+            address: encryptedAddress,
+            postalCode: encryptedPostalCode,
+            state: encryptedState,
             isValidated: false,
             documentUrl: url,
             createdAt: new Date().toISOString()

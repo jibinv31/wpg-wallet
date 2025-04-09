@@ -6,7 +6,7 @@ import {
     logout,
     handleSignup
 } from "../controllers/auth.controller.js";
-import { renderDashboard } from "../controllers/dashboard.controller.js"; // ✅ Imported here
+import { renderDashboard, renderProfile } from "../controllers/dashboard.controller.js";
 
 import { sendOTPEmail, verifyOTPCode } from "../utils/otp.js";
 import { getUserByEmail } from "../models/user.model.js";
@@ -14,7 +14,7 @@ import { getUserByEmail } from "../models/user.model.js";
 
 const router = express.Router();
 
-// ✅ Multer setup (temporary file storage)
+// ✅ Multer setup
 const upload = multer({ dest: os.tmpdir() });
 
 // 🧠 Session check middleware
@@ -41,8 +41,9 @@ router.post("/signup", upload.single("kycDocument"), handleSignup);
 router.post("/sessionLogin", sessionLogin);
 router.get("/logout", logout);
 
-// ✅ Protected Dashboard (use controller)
-router.get("/dashboard", requireAuth, renderDashboard); // ✅ Fixed here
+// ✅ Protected routes
+router.get("/dashboard", requireAuth, renderDashboard);
+router.get("/profile", requireAuth, renderProfile);
 
 //adding for MFA
 
