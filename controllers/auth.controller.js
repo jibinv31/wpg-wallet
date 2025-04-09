@@ -50,8 +50,16 @@ export const sessionLogin = async (req, res) => {
       // 🔍 Validate regular user
       const user = await getUserById(uid);
       if (!user) {
-        return res.status(403).json({ error: "Please complete full signup with KYC document." });
+        // ❌ Delete the user from Firebase Auth
+        await admin.auth().deleteUser(uid);
+      
+        console.log(`🗑️ Deleted incomplete user ${email} from Firebase Auth`);
+      
+        return res.status(403).json({
+          error: "You are not registered with WPG Wallet. Please complete your KYC to continue.",
+        });
       }
+      
   
       if (user.isValidated === false) {
         return res.status(403).json({ error: "User not yet validated by admin." });
