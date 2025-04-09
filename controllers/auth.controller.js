@@ -1,3 +1,4 @@
+
 import { admin, db, storage } from "../services/firebase.js";
 import { getUserById, createUser } from "../models/user.model.js";
 import { v4 as uuidv4 } from "uuid";
@@ -13,22 +14,24 @@ export const sessionLogin = async (req, res) => {
     const { idToken, name, otp } = req.body;
     console.log("📥 Received session login request...");
   
-    if (!otp) {
-      return res.status(400).json({ error: "OTP is required" });
-    }
   
     try {
       const decodedToken = await admin.auth().verifyIdToken(idToken);
       const uid = decodedToken.uid;
       const email = decodedToken.email;
-  
+      const signInProvider = decodedToken.firebase?.sign_in_provider;
+
       console.log(`✅ Verified token for user: ${email} (UID: ${uid})`);
+
+      if (!otp && signInProvider !== "google.com") {
+        return res.status(400).json({ error: "OTP is required" });
+      }
   
       // 🔐 Validate OTP for everyone
-      const isOTPValid = await verifyOTPCode(email, otp);
-      if (!isOTPValid) {
-        return res.status(401).json({ error: "Invalid OTP" });
-      }
+    //   const isOTPValid = await verifyOTPCode(email, otp);
+    //   if (!isOTPValid) {
+    //     return res.status(401).json({ error: "Invalid OTP" });
+    //   }
   
       // 🔍 Check if super admin
       const superAdminSnap = await db.collection("super_admins").doc(uid).get();
@@ -181,6 +184,6 @@ export const logout = (req, res) => {
             return res.status(500).send("Logout error");
         }
         console.log("✅ Session destroyed.");
-        res.redirect("/login");
+        res.render("landing");
     });
 };

@@ -35,8 +35,7 @@
             <span class="password-toggle" onclick="togglePassword('password')">👁️</span>
           </div>
 
-          <button type="button" class="btn btn-secondary w-100 mb-3" id="sendOtpBtn">Send OTP</button>
-          <button type="button" class="btn btn-primary w-100" id="loginBtn">Login</button>
+          <button type="submit" class="btn btn-primary w-100" id="loginBtn">Login</button>
         </form>
 
         <hr />
@@ -81,11 +80,8 @@
 
   <!-- ✅ Firebase Auth & Login Logic -->
   <script type="module">
-    import {
-      auth,
-      signInWithEmailAndPassword
-    } from "/js/firebase-config.js";
-  
+    import { auth, signInWithEmailAndPassword } from "/js/firebase-config.js";
+
     const emailInput = document.getElementById("email");
     const passwordInput = document.getElementById("password");
     const otpModal = new bootstrap.Modal(document.getElementById("otpModal"));
@@ -94,27 +90,9 @@
     let tempIdToken = null;
     let tempName = null;
 
-    // 🔐 Send OTP to user's email
-    document.getElementById("sendOtpBtn").addEventListener("click", async () => {
-      const email = emailInput.value.trim();
-      if (!email) return alert("Please enter your email first");
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-      const res = await fetch("/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      const result = await res.json();
-      if (result.success) {
-        alert("✅ OTP sent to your email.");
-      } else {
-        alert("❌ Error verifying credentials or sending OTP");
-      }
-    });
-
-    // 👤 Handle email/password login and show OTP modal
-    document.getElementById("loginBtn").addEventListener("click", async () => {
       const email = emailInput.value.trim();
       const password = passwordInput.value.trim();
 
@@ -122,13 +100,25 @@
         const cred = await signInWithEmailAndPassword(auth, email, password);
         tempIdToken = await cred.user.getIdToken();
         tempName = cred.user.displayName;
+
+        const sendOtpRes = await fetch("/send-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+
+        const otpData = await sendOtpRes.json();
+
+        if (!otpData.success) {
+          return alert("❌ Failed to send OTP. Please try again.");
+        }
+
         otpModal.show();
       } catch (err) {
         alert("❌ Invalid email or password");
       }
     });
 
-    // ✅ Handle OTP verification + session login
     document.getElementById("verifyOtpBtn").addEventListener("click", async () => {
       const otp = otpInput.value.trim();
       if (!otp || !tempIdToken) return alert("Enter OTP");
@@ -136,11 +126,7 @@
       const res = await fetch("/sessionLogin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          idToken: tempIdToken,
-          name: tempName,
-          otp: document.getElementById("otpInput").value, // ✅ OTP input field
-        }),
+        body: JSON.stringify({ idToken: tempIdToken, name: tempName, otp }),
       });
 
       const result = await res.json();
@@ -150,10 +136,39 @@
         alert(result.error || "Login failed");
       }
     });
-  </script>
 
-  <!-- 🔌 Firebase config -->
-  <script type="module" src="/js/firebase-config.js"></script>
+    import { provider, signInWithPopup } from "/js/firebase-config.js";
+
+const googleBtn = document.getElementById("googleLogin");
+
+if (googleBtn) {
+  googleBtn.addEventListener("click", async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+      const name = result.user.displayName || "Google User";
+
+      const res = await fetch("/sessionLogin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken, name })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        window.location.href = data.redirect || "/dashboard";
+      } else {
+        alert(data.error || "Google login failed. Try again.");
+      }
+    } catch (err) {
+      console.error("Google Sign-In Error:", err.message);
+      alert("Google Sign-In failed. Try again.");
+    }
+  });
+}
+
+  </script>
 
   <!-- 📦 Bootstrap -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
