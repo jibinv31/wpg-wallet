@@ -1,6 +1,7 @@
 import express from "express";
 import multer from "multer";
 import os from "os";
+import { admin, db } from "../services/firebase.js";
 import {
     sessionLogin,
     logout,
@@ -47,42 +48,63 @@ router.get("/profile", requireAuth, renderProfile);
 
 //adding for MFA
 
-
 // router.post("/send-otp", async (req, res) => {
-//     const { email } = req.body;
-  
-//     try {
-//       await sendOTPEmail(email); // ✅ now saves to Firestore
-//       res.json({ success: true, message: "OTP sent successfully" });
-//     } catch (err) {
-//       console.error("Error sending OTP:", err.message);
-//       res.status(500).json({ success: false, message: "Failed to send OTP" });
+//   const { email } = req.body;
+
+//   try {
+//     const user = await getUserByEmail(email);
+//     if (!user) {
+//       return res.status(404).json({ success: false, message: "User not registered." });
 //     }
-//   });
+
+//     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+//     req.session.otp = otp;
+//     req.session.otpEmail = email;
+
+//     await sendOTPEmail(email, otp);
+//     res.json({ success: true, message: "OTP sent successfully" });
+//   } catch (err) {
+//     console.error("❌ Error verifying credentials or sending OTP:", err.message);
+//     return res.status(401).json({
+//       success: false,
+//       message: "Oops! Please check your email and password and try again.",
+//     });
+//   }
+// });
 
 router.post("/send-otp", async (req, res) => {
   const { email } = req.body;
 
   try {
-    const user = await getUserByEmail(email);
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not registered." });
+    // Check if email exists in Firebase Auth (regular users)
+    let userExists = false;
+    try {
+      await admin.auth().getUserByEmail(email);
+      userExists = true;
+    } catch (_) {
+      // If not in auth, check in super_admins collection
+      const snap = await db.collection("super_admins")
+        .where("email", "==", email)
+        .limit(1)
+        .get();
+
+      userExists = !snap.empty;
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    req.session.otp = otp;
-    req.session.otpEmail = email;
+    if (!userExists) {
+      return res.status(404).json({ success: false, message: "User not found or not registered." });
+    }
 
-    await sendOTPEmail(email, otp);
+    // ✅ Send OTP
+    await sendOTPEmail(email);
     res.json({ success: true, message: "OTP sent successfully" });
+
   } catch (err) {
-    console.error("❌ Error verifying credentials or sending OTP:", err.message);
-    return res.status(401).json({
-      success: false,
-      message: "Oops! Please check your email and password and try again.",
-    });
+    console.error("Error sending OTP:", err.message);
+    res.status(500).json({ success: false, message: "Failed to send OTP" });
   }
 });
+
   
 
   // GET: Show OTP entry page
