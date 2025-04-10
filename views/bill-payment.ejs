@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pay Bills | WPG Wallet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body class="bg-light">
+  <%- include("partials/header", { user: user, notificationCount }) %>
+  <div class="d-flex">
+    <%- include("partials/nav", { currentRoute: 'bills' }) %>
+
+    <main class="p-4 flex-grow-1">
+      <h4 class="mb-4">Pay Your Bills</h4>
+      <form id="billForm">
+
+
+        <!-- 🔁 Select Saved Biller -->
+        <div class="mb-3">
+          <label for="savedBiller" class="form-label">Use Saved Biller</label>
+          <select class="form-select" id="savedBiller">
+            <option value="" selected>-- Select --</option>
+            <% if (savedBillers && savedBillers.length > 0) { %>
+              <% savedBillers.forEach(biller => { %>
+                <option 
+                  data-type="<%= biller.billType %>" 
+                  data-provider="<%= biller.provider %>" 
+                  data-consumer="<%= biller.consumerId %>">
+                  <%= biller.billType %> - <%= biller.provider %> (****<%= biller.consumerId.slice(-4) %>)
+                </option>
+              <% }) %>
+            <% } %>
+          </select>
+        </div>
+
+        <!-- Bill Type -->
+        <div class="mb-3">
+          <label for="billType" class="form-label">Bill Type</label>
+          <select class="form-select" id="billType" name="billType" required>
+            <option disabled selected>Select Bill Type</option>
+            <option>Electricity</option>
+            <option>Water</option>
+            <option>Internet</option>
+            <option>Mobile</option>
+          </select>
+        </div>
+
+        <!-- Provider -->
+        <div class="mb-3">
+          <label for="provider" class="form-label">Provider</label>
+          <select class="form-select" id="provider" name="provider" required>
+            <option disabled selected>Select Provider</option>
+          </select>
+        </div>
+
+        <!-- Consumer ID -->
+        <div class="mb-3">
+          <label for="consumerId" class="form-label">Consumer/Account Number</label>
+          <input type="text" class="form-control" name="consumerId" id="consumerId" required />
+        </div>
+
+        <!-- Amount -->
+        <div class="mb-3">
+          <label for="amount" class="form-label">Bill Amount</label>
+          <input type="number" class="form-control" step="0.01" min="0" name="amount" id="amount" required />
+        </div>
+
+        <!-- Source Account -->
+        <div class="mb-3">
+          <label for="sourceAccount" class="form-label">Pay From</label>
+          <select class="form-select" name="sourceAccount" id="sourceAccount" required>
+            <% accounts.forEach(account => { %>
+              <option value="<%= account.id %>">
+                <%= account.bankName %> - ****<%= account.accountNumber %> ($<%= account.balance %>)
+              </option>
+            <% }) %>
+          </select>
+        </div>
+
+        <!-- Optional Note -->
+        <div class="mb-3">
+          <label for="note" class="form-label">Note (optional)</label>
+          <textarea class="form-control" name="note" id="note" rows="2"></textarea>
+        </div>
+
+        <!-- 💾 Save this biller -->
+        <div class="form-check mb-4">
+          <input class="form-check-input" type="checkbox" value="true" id="saveBiller" name="saveBiller" />
+          <label class="form-check-label" for="saveBiller">
+            Save this biller for future use
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Pay Bill</button>
+      </form>
+    </main>
+  </div>
+
+  <!-- Bootstrap -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    const providerOptions = {
+      Electricity: ["Hydro Manitoba", "Toronto Hydro"],
+      Water: ["City Water Dept"],
+      Internet: ["Shaw", "Bell", "Rogers"],
+      Mobile: ["Bell", "Telus", "Freedom Mobile"]
+    };
+
+    const billTypeSelect = document.getElementById("billType");
+    const providerSelect = document.getElementById("provider");
+
+    billTypeSelect.addEventListener("change", () => {
+      const selectedType = billTypeSelect.value;
+      providerSelect.innerHTML = '<option disabled selected>Select Provider</option>';
+      if (providerOptions[selectedType]) {
+        providerOptions[selectedType].forEach(provider => {
+          const option = document.createElement("option");
+          option.value = provider;
+          option.textContent = provider;
+          providerSelect.appendChild(option);
+        });
+      }
+    });
+
+    // Autofill form when selecting a saved biller
+    const savedBillerSelect = document.getElementById("savedBiller");
+    savedBillerSelect?.addEventListener("change", () => {
+      const selected = savedBillerSelect.options[savedBillerSelect.selectedIndex];
+      const billType = selected.getAttribute("data-type");
+      const provider = selected.getAttribute("data-provider");
+      const consumer = selected.getAttribute("data-consumer");
+
+      if (billType) {
+        billTypeSelect.value = billType;
+        billTypeSelect.dispatchEvent(new Event("change"));
+
+        setTimeout(() => {
+          providerSelect.value = provider;
+        }, 100);
+      }
+
+      if (consumer) {
+        document.getElementById("consumerId").value = consumer;
+      }
+    });
+  </script>
+  <!-- ✅ Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content text-center p-4">
+        <h5 class="mb-2">✅ Bill Paid Successfully!</h5>
+        <p>You’ll be redirected to Transaction History...</p>
+      </div>
+    </div>
+  </div>
+  <script>
+    const billForm = document.getElementById("billForm");
+    const successModal = new bootstrap.Modal(document.getElementById("successModal"));
+  
+    billForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+  
+      const formData = new FormData(billForm);
+      const payload = {};
+      for (let [key, value] of formData.entries()) {
+        payload[key] = value;
+      }
+  
+      try {
+        const res = await fetch("/pay", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+  
+        if (res.ok) {
+          successModal.show();
+          setTimeout(() => {
+            window.location.href = "/transactions";
+          }, 2000);
+        } else {
+          const msg = await res.text();
+          alert(msg || "❌ Bill payment failed.");
+        }
+      } catch (err) {
+        console.error("❌ Error submitting bill payment:", err.message);
+        alert("Something went wrong. Please try again.");
+      }
+    });
+  </script>
+  
+</body>
+</html>
