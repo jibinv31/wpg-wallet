@@ -6,6 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .chart-container {
+      max-width: 380px;
+      margin: 0 auto;
+    }
+  </style>
 </head>
 <body class="bg-light">
   <%- include("partials/header", { user: user, notificationCount }) %>
@@ -13,27 +19,50 @@
     <%- include("partials/nav", { currentRoute: 'analytics' }) %>
 
     <main class="p-4 flex-grow-1">
-      <h4 class="mb-4">📊 Spending Analytics</h4>
+      <h4 class="mb-4">📊 Spending & Savings Analytics</h4>
 
       <% if (totalSpent > 0) { %>
-        <div class="card shadow p-4 text-center">
-          <h5 class="mb-3">Your Spending Breakdown</h5>
-
-          <!-- Chart Type Selector -->
-          <div class="mb-4">
-            <label class="form-label me-2">View as:</label>
-            <select id="chartTypeSelector" class="form-select d-inline-block w-auto">
+        <!-- Spending Chart -->
+        <div class="card shadow p-4 mb-4 text-center">
+          <h5 class="mb-3">Spending Breakdown</h5>
+          <div class="mb-3">
+            <select id="chartTypeSpending" class="form-select d-inline w-auto">
               <option value="pie">Pie</option>
               <option value="bar">Bar</option>
               <option value="line">Line</option>
             </select>
           </div>
-
-          <!-- Chart Container -->
-          <div class="d-flex justify-content-center">
-            <canvas id="spendingChart" style="max-width: 350px; max-height: 350px;"></canvas>
+          <div class="chart-container">
+            <canvas id="spendingChart" height="350" width="350"></canvas>
           </div>
         </div>
+
+        <!-- Salary input -->
+        <form class="row g-3 mb-4" method="POST" action="/salary">
+          <div class="col-md-6">
+            <input type="number" step="0.01" min="0" class="form-control" name="salary" value="<%= salary || '' %>" placeholder="Enter your monthly salary" required />
+          </div>
+          <div class="col-md-3">
+            <button class="btn btn-primary w-100" type="submit">Update Salary</button>
+          </div>
+        </form>
+
+        <!-- Savings Chart -->
+        <% if (savingsChartData && savingsChartData.labels.length > 0) { %>
+        <div class="card shadow p-4 text-center">
+          <h5 class="mb-3">Monthly Spending vs Savings</h5>
+          <div class="mb-3">
+            <select id="chartTypeSavings" class="form-select d-inline w-auto">
+              <option value="bar">Bar</option>
+              <option value="line">Line</option>
+              <option value="pie">Pie</option>
+            </select>
+          </div>
+          <div class="chart-container">
+            <canvas id="savingsChart" height="350" width="350"></canvas>
+          </div>
+        </div>
+        <% } %>
       <% } else { %>
         <div class="alert alert-info">No transactions found to display.</div>
       <% } %>
@@ -41,29 +70,27 @@
   </div>
 
   <script>
-    const chartData = <%- JSON.stringify(chartData) %>;
-    const ctx = document.getElementById('spendingChart');
-    let currentChart;
+    const spendingData = <%- JSON.stringify(chartData) %>;
+    const savingsData = <%- JSON.stringify(savingsChartData) %>;
 
-    function renderChart(type) {
-      if (currentChart) currentChart.destroy();
+    let spendingChart, savingsChart;
 
-      currentChart = new Chart(ctx, {
+    function renderSpendingChart(type) {
+      if (spendingChart) spendingChart.destroy();
+      spendingChart = new Chart(document.getElementById('spendingChart'), {
         type,
         data: {
-          labels: chartData.labels,
+          labels: spendingData.labels,
           datasets: [{
             label: 'Spending by Category',
-            data: chartData.values,
-            backgroundColor: [
-              '#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1',
-              '#fd7e14', '#20c997', '#17a2b8', '#e83e8c'
-            ],
+            data: spendingData.values,
+            backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1'],
             borderWidth: 1
           }]
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           plugins: {
             legend: {
               position: 'bottom'
@@ -73,12 +100,62 @@
       });
     }
 
-    document.getElementById('chartTypeSelector').addEventListener('change', function () {
-      renderChart(this.value);
+    function renderSavingsChart(type) {
+      if (savingsChart) savingsChart.destroy();
+
+      const isPie = type === "pie";
+      const datasets = isPie
+        ? [{
+            label: "Total Net (Saved + Spent)",
+            data: [...savingsData.spent, ...savingsData.savings],
+            backgroundColor: ['#dc3545', '#28a745'],
+            borderWidth: 1
+          }]
+        : [
+            {
+              label: "Spent",
+              data: savingsData.spent,
+              backgroundColor: "#dc3545",
+              borderColor: "#dc3545",
+              fill: false
+            },
+            {
+              label: "Saved",
+              data: savingsData.savings,
+              backgroundColor: "#28a745",
+              borderColor: "#28a745",
+              fill: false
+            }
+          ];
+
+      savingsChart = new Chart(document.getElementById("savingsChart"), {
+        type,
+        data: {
+          labels: savingsData.labels,
+          datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top'
+            }
+          }
+        }
+      });
+    }
+
+    document.getElementById("chartTypeSpending").addEventListener("change", e => {
+      renderSpendingChart(e.target.value);
     });
 
-    renderChart('pie');
-  </script>
+    document.getElementById("chartTypeSavings").addEventListener("change", e => {
+      renderSavingsChart(e.target.value);
+    });
 
+    renderSpendingChart("pie");
+    renderSavingsChart("bar");
+  </script>
 </body>
 </html>
