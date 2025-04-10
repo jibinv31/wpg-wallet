@@ -41,70 +41,76 @@
     <!-- Header -->
     <%- include('partials/header', { user: user }) %>
 
-        <!-- Main layout without nav -->
-        <main class="flex-grow-1 p-4 bg-white">
-            <!-- Welcome Section -->
-            <div class="mb-4">
-                <h4 class="text-muted">Welcome, <span class="text-primary">
-                        <%= user.name || 'Admin' %>
-                    </span></h4>
-                <p>Manage user validations and monitor document uploads.</p>
-            </div>
+        <!-- Layout with nav -->
+        <div class="d-flex flex-grow-1">
+            <%- include('partials/nav', { user: user, currentRoute: 'admin-dashboard' }) %>
 
-            <!-- Pending Users Table -->
-            <div class="mt-4">
-                <h5 class="mb-3">Pending User Validations</h5>
+                <main class="flex-grow-1 p-4 bg-white">
+                    <!-- Welcome Section -->
+                    <div class="mb-4">
+                        <h4 class="text-muted">Welcome, <span class="text-primary">
+                                <%= user.name || 'Admin' %>
+                            </span></h4>
+                        <p>Manage user validations and monitor document uploads.</p>
+                    </div>
 
-                <% if (pendingUsers.length> 0) { %>
-                    <table class="table table-hover border">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Uploaded Document</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% pendingUsers.forEach(user=> { %>
-                                <tr>
-                                    <td>
-                                        <%= user.name %>
-                                    </td>
-                                    <td>
-                                        <%= user.email %>
-                                    </td>
-                                    <td>
-                                        <% if (user.documentUrl) { %>
-                                            <a href="<%= user.documentUrl %>" target="_blank"
-                                                class="btn btn-sm btn-outline-primary">
-                                                View Document
-                                            </a>
-                                            <% } else { %>
-                                                <span class="text-muted">No document</span>
-                                                <% } %>
-                                    </td>
-                                    <td>
-                                        <span class="badge badge-warning">Pending</span>
-                                    </td>
-                                    <td class="action-buttons">
-                                        <form method="POST" action="/admin/approve/<%= user.id %>">
-                                            <button class="btn btn-success btn-sm" type="submit">✅ Approve</button>
-                                        </form>
-                                        <form method="POST" action="/admin/reject/<%= user.id %>">
-                                            <button class="btn btn-danger btn-sm" type="submit">❌ Reject</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                <% }) %>
-                        </tbody>
-                    </table>
-                    <% } else { %>
-                        <p class="text-muted">No users pending validation.</p>
-                        <% } %>
-            </div>
-        </main>
+                    <!-- Pending Users Table -->
+                    <div class="mt-4">
+                        <h5 class="mb-3">Pending User Validations</h5>
+
+                        <% if (pendingUsers.length> 0) { %>
+                            <table class="table table-hover border">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Uploaded Document</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% pendingUsers.forEach(user=> { %>
+                                        <tr>
+                                            <td>
+                                                <%= user.name %>
+                                            </td>
+                                            <td>
+                                                <%= user.email %>
+                                            </td>
+                                            <td>
+                                                <% if (user.documentUrl) { %>
+                                                    <a href="<%= user.documentUrl %>" target="_blank"
+                                                        class="btn btn-sm btn-outline-primary">
+                                                        View Document
+                                                    </a>
+                                                    <% } else { %>
+                                                        <span class="text-muted">No document</span>
+                                                        <% } %>
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-warning">Pending</span>
+                                            </td>
+                                            <td class="action-buttons">
+                                                <form method="POST" action="/admin/approve/<%= user.id %>">
+                                                    <button class="btn btn-success btn-sm" type="submit">✅
+                                                        Approve</button>
+                                                </form>
+                                                <form method="POST" action="/admin/reject/<%= user.id %>">
+                                                    <button class="btn btn-danger btn-sm" type="submit">❌
+                                                        Reject</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                </tbody>
+                            </table>
+                            <% } else { %>
+                                <p class="text-muted">No users pending validation.</p>
+                                <% } %>
+                    </div>
+                </main>
+        </div>
 
         <!-- Footer -->
         <%- include('partials/footer') %>

@@ -6,6 +6,29 @@ import {
     signInWithPopup
 } from "./firebase-config.js";
 
+// ✅ Toast utility
+function showToast(message, isSuccess = false) {
+    const toastContainer = document.createElement("div");
+    toastContainer.className = "toast-container position-fixed top-0 end-0 p-3";
+    toastContainer.style.zIndex = "1050";
+
+    const toast = document.createElement("div");
+    toast.className = `toast align-items-center text-white ${isSuccess ? "bg-success" : "bg-danger"} show`;
+    toast.role = "alert";
+
+    toast.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    `;
+
+    toastContainer.appendChild(toast);
+    document.body.appendChild(toastContainer);
+
+    setTimeout(() => toastContainer.remove(), 5000);
+}
+
 // 🚀 Handle Login
 const loginForm = document.getElementById("loginForm");
 const loginSpinner = document.getElementById("loginSpinner");
@@ -18,7 +41,7 @@ if (loginForm) {
         const password = document.getElementById("password")?.value;
 
         if (!email || !password) {
-            alert("Email and password are required.");
+            showToast("Email and password are required.");
             return;
         }
 
@@ -37,16 +60,15 @@ if (loginForm) {
             if (res.ok) {
                 loginForm.classList.add("d-none");
                 loginSpinner.classList.remove("d-none");
-
                 setTimeout(() => {
                     window.location.href = data.redirect || "/dashboard";
                 }, 1000);
             } else {
-                alert(data.error || "Login failed. Please try again.");
+                showToast(data.error || "Login failed. Please try again.");
             }
         } catch (err) {
             console.error("Login Error:", err.message);
-            alert("Invalid login credentials");
+            showToast("Invalid login credentials");
         }
     });
 }
@@ -68,7 +90,7 @@ if (signupForm) {
         const kycDocument = formData.get("kycDocument");
 
         if (!firstName || !lastName || !name) {
-            alert("Please enter your full name.");
+            showToast("Please enter your full name.");
             return;
         }
 
@@ -76,17 +98,17 @@ if (signupForm) {
         const passwordPattern = /^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
 
         if (!emailPattern.test(email)) {
-            alert("Please enter a valid email address.");
+            showToast("Please enter a valid email address.");
             return;
         }
 
         if (!passwordPattern.test(password)) {
-            alert("Password must be at least 8 characters, include uppercase, number, and special char.");
+            showToast("Password must be at least 8 characters, include uppercase, number, and special char.");
             return;
         }
 
         if (!kycDocument || kycDocument.size === 0) {
-            alert("Please upload a valid KYC document.");
+            showToast("Please upload a valid KYC document.");
             return;
         }
 
@@ -94,7 +116,6 @@ if (signupForm) {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const idToken = await userCredential.user.getIdToken();
 
-            // Append token + name to formData
             formData.append("idToken", idToken);
             formData.append("name", name);
 
@@ -116,13 +137,11 @@ if (signupForm) {
         } catch (err) {
             console.error("Signup Error:", err);
 
+            // Handle Firebase client-side email already in use error
             if (err.code === "auth/email-already-in-use") {
-                alert("Email already exists. Redirecting to login...");
-                setTimeout(() => {
-                    window.location.href = "/login";
-                }, 2000);
+                window.location.href = "/signup?error=email-already-in-use";
             } else {
-                alert("Signup failed. Try again.");
+                window.location.href = "/signup?error=signup-failed";
             }
         }
     });
@@ -148,11 +167,11 @@ if (googleBtn) {
             if (res.ok) {
                 window.location.href = data.redirect || "/dashboard";
             } else {
-                alert(data.error || "Google login failed. Try again.");
+                showToast(data.error || "Google login failed. Try again.");
             }
         } catch (err) {
             console.error("Google Login Error:", err.message);
-            alert("Google login failed. Try again.");
+            showToast("Google login failed. Try again.");
         }
     });
 }

@@ -1,10 +1,16 @@
 import express from "express";
-import { getUnvalidatedUsers, approveUser, rejectUser } from "../controllers/admin.controller.js";
+import {
+    getUnvalidatedUsers,
+    approveUser,
+    rejectUser,
+    getAllUsers,
+    toggleUserBlock
+} from "../controllers/admin.controller.js";
 import { db } from "../services/firebase.js";
 
 const router = express.Router();
 
-// 🛡️ Middleware to check super admin
+// 🛡️ Super Admin check middleware
 const isSuperAdmin = async (req, res, next) => {
     const uid = req.session?.user?.uid;
     if (!uid) return res.redirect("/login");
@@ -21,9 +27,13 @@ const isSuperAdmin = async (req, res, next) => {
     }
 };
 
-// 🔐 Admin dashboard and actions
+// 🔐 Admin dashboard for user approvals
 router.get("/admin-dashboard", isSuperAdmin, getUnvalidatedUsers);
-router.post("/admin/approve/:userId", isSuperAdmin, approveUser); // ✅ updated
+router.post("/admin/approve/:userId", isSuperAdmin, approveUser);
 router.post("/admin/reject/:userId", isSuperAdmin, rejectUser);
+
+// 🧾 Admin panel to view all users and manage block status
+router.get("/admin-users", isSuperAdmin, getAllUsers);
+router.post("/admin/block/:userId", isSuperAdmin, toggleUserBlock); // expects ?block=true/false
 
 export default router;
