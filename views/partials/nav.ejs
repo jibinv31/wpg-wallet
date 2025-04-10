@@ -1,34 +1,58 @@
 <div class="d-flex flex-column flex-shrink-0 p-3 bg-light justify-content-between" style="width: 250px; height: 100vh;">
   <div>
-    <ul class="nav nav-pills flex-column mb-auto">
-      <li class="nav-item">
-        <a href="/dashboard" class="nav-link <%= currentRoute === 'dashboard' ? 'active text-white' : 'text-dark' %>">🏠
-          Home</a>
-      </li>
-      <li>
-        <a href="/banks" class="nav-link <%= currentRoute === 'banks' ? 'active text-white' : 'text-dark' %>">🏦 My
-          Banks</a>
-      </li>
-      <li>
-        <a href="/transactions"
-          class="nav-link <%= currentRoute === 'transactions' ? 'active text-white' : 'text-dark' %>">📜 Transaction
-          History</a>
-      </li>
-      <li>
-        <a href="/transfer" class="nav-link <%= currentRoute === 'transfer' ? 'active text-white' : 'text-dark' %>">💸
-          Payment Transfer</a>
-      </li>
-      <li>
-        <a href="/bill-payment" class="nav-link <%= currentRoute === 'bill-payment' ? 'active text-white' : 'text-dark' %>">🧾
-          Bill Payment</a>
-      </li>
-      <li>
-        <a href="/analytics" class="nav-link <%= currentRoute === 'analytics' ? 'active text-white' : 'text-dark' %>">📊 Spending Analytics</a>
-      </li>
-    </ul>
+    <!-- 🔓 Show only for regular users -->
+    <% if (!user.isSuperAdmin) { %>
+      <ul class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
+          <a href="/dashboard"
+            class="nav-link <%= currentRoute === 'dashboard' ? 'active text-white' : 'text-dark' %>">🏠
+            Home</a>
+        </li>
+        <li>
+          <a href="/banks" class="nav-link <%= currentRoute === 'banks' ? 'active text-white' : 'text-dark' %>">🏦 My
+            Banks</a>
+        </li>
+        <li>
+          <a href="/transactions"
+            class="nav-link <%= currentRoute === 'transactions' ? 'active text-white' : 'text-dark' %>">📜 Transaction
+            History</a>
+        </li>
+        <li>
+          <a href="/transfer" class="nav-link <%= currentRoute === 'transfer' ? 'active text-white' : 'text-dark' %>">💸
+            Payment Transfer</a>
+        </li>
+        <li>
+          <a href="/bill-payment"
+            class="nav-link <%= currentRoute === 'bill-payment' ? 'active text-white' : 'text-dark' %>">🧾 Bill
+            Payment</a>
+        </li>
+        <li>
+          <a href="/analytics"
+            class="nav-link <%= currentRoute === 'analytics' ? 'active text-white' : 'text-dark' %>">📊 Spending
+            Analytics</a>
+        </li>
+      </ul>
+      <% } %>
+
+        <!-- 🔐 Show only for super admins -->
+        <% if (user && user.isSuperAdmin) { %>
+          <ul class="nav nav-pills flex-column mb-auto mt-2">
+            <li>
+              <a href="/admin-dashboard"
+                class="nav-link <%= currentRoute === 'admin-dashboard' ? 'active text-white' : 'text-dark' %>">🛡️ Admin
+                Dashboard</a>
+            </li>
+            <li>
+              <a href="/admin-users"
+                class="nav-link <%= currentRoute === 'admin-users' ? 'active text-white' : 'text-dark' %>">👥 Manage
+                Users</a>
+            </li>
+
+          </ul>
+          <% } %>
   </div>
 
-  <!-- 👤 Profile link at bottom -->
+  <!-- 👤 Profile link always shown -->
   <div>
     <ul class="nav flex-column">
       <li>

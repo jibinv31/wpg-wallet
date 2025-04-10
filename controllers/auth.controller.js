@@ -1,4 +1,3 @@
-
 import { admin, db, storage } from "../services/firebase.js";
 import { getUserById, createUser } from "../models/user.model.js";
 import { v4 as uuidv4 } from "uuid";
@@ -8,190 +7,195 @@ import { decrypt, encrypt } from "../utils/encryption.js";
 import { sendOTPEmail } from "../utils/email.js";
 import { verifyOTPCode } from "../utils/otp.js";
 
-
 // ✅ Session Login (handles both normal users and super admins)
 export const sessionLogin = async (req, res) => {
-    const { idToken, name, otp } = req.body;
-    console.log("📥 Received session login request...");
-  
-  
-    try {
-      const decodedToken = await admin.auth().verifyIdToken(idToken);
-      const uid = decodedToken.uid;
-      const email = decodedToken.email;
-      const signInProvider = decodedToken.firebase?.sign_in_provider;
+  const { idToken, name, otp } = req.body;
+  console.log("📥 Received session login request...");
 
-      console.log(`✅ Verified token for user: ${email} (UID: ${uid})`);
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const uid = decodedToken.uid;
+    const email = decodedToken.email;
+    const signInProvider = decodedToken.firebase?.sign_in_provider;
 
-      if (!otp && signInProvider !== "google.com") {
-        return res.status(400).json({ error: "OTP is required" });
-      }
-  
-      // 🔐 Validate OTP for everyone
-    //   const isOTPValid = await verifyOTPCode(email, otp);
-    //   if (!isOTPValid) {
-    //     return res.status(401).json({ error: "Invalid OTP" });
-    //   }
-  
-      // 🔍 Check if super admin
-      const superAdminSnap = await db.collection("super_admins").doc(uid).get();
-      const isSuperAdmin = superAdminSnap.exists;
-  
-      if (isSuperAdmin) {
-        req.session.user = {
-          uid,
-          email,
-          name: name || "Super Admin"
-        };
-        console.log("🔐 Super admin logged in.");
-        return res.status(200).json({ message: "Super admin session created", redirect: "/admin-dashboard" });
-      }
-  
-      // 🔍 Validate regular user
-      const user = await getUserById(uid);
-      if (!user) {
-        // ❌ Delete the user from Firebase Auth
-        await admin.auth().deleteUser(uid);
-      
-        console.log(`🗑️ Deleted incomplete user ${email} from Firebase Auth`);
-      
-        return res.status(403).json({
-          error: "You are not registered with WPG Wallet. Please complete your KYC to continue.",
-        });
-      }
-      
-  
-      if (user.isValidated === false) {
-        return res.status(403).json({ error: "User not yet validated by admin." });
-      }
-  // ✅ Decrypt before saving to session
-  const decryptedSSN = user.ssn ? decrypt(user.ssn) : null;
-  const decryptedAddress = user.address ? decrypt(user.address) : null;
-  const decryptedPostalCode = user.postalCode ? decrypt(user.postalCode) : null;
-  const decryptedState = user.state ? decrypt(user.state) : null;
+    console.log(`✅ Verified token for user: ${email} (UID: ${uid})`);
 
-  console.log("🔓 Decrypted values for session:", {
+    if (!otp && signInProvider !== "google.com") {
+      return res.status(400).json({ error: "OTP is required" });
+    }
+
+    // 🔐 OTP validation placeholder
+    // const isOTPValid = await verifyOTPCode(email, otp);
+    // if (!isOTPValid) return res.status(401).json({ error: "Invalid OTP" });
+
+    // 🔍 Check if super admin
+    const superAdminSnap = await db.collection("super_admins").doc(uid).get();
+    const isSuperAdmin = superAdminSnap.exists;
+
+    if (isSuperAdmin) {
+      req.session.user = {
+        uid,
+        email,
+        name: name || "Super Admin",
+        isSuperAdmin: true
+      };
+
+      console.log("🔐 Super admin logged in.");
+      return res.status(200).json({
+        message: "Super admin session created",
+        redirect: "/admin-dashboard"
+      });
+    }
+
+    // 🔍 Check if regular user exists
+    const user = await getUserById(uid);
+    if (!user) {
+      await admin.auth().deleteUser(uid);
+      console.log(`🗑️ Deleted incomplete user ${email} from Firebase Auth`);
+      return res.status(403).json({
+        error: "You are not registered with WPG Wallet. Please complete your KYC to continue."
+      });
+    }
+
+    if (user.isValidated === false) {
+      return res.status(403).json({ error: "User not yet validated by admin." });
+    }
+
+    if (user.isBlocked === true) {
+      return res.status(403).json({ error: "Your account has been blocked by the admin." });
+    }
+
+    // ✅ Decrypt sensitive data
+    const decryptedSSN = user.ssn ? decrypt(user.ssn) : null;
+    const decryptedAddress = user.address ? decrypt(user.address) : null;
+    const decryptedPostalCode = user.postalCode ? decrypt(user.postalCode) : null;
+    const decryptedState = user.state ? decrypt(user.state) : null;
+
+    console.log("🔓 Decrypted values for session:", {
       decryptedSSN,
       decryptedAddress,
       decryptedPostalCode,
       decryptedState
-  });
+    });
 
-  
-  req.session.user = {
-    uid,
-    email,
-    name: user.name || name || "User",
-    dob: user.dob || "N/A",
-    ssn: decryptedSSN ? "****" + decryptedSSN.slice(-2) : "N/A",
-    decryptedSSN: decryptedSSN || "N/A",
-    address: decryptedAddress || "N/A",
-    postalCode: decryptedPostalCode || "N/A",
-    state: decryptedState || "N/A"
+    req.session.user = {
+      uid,
+      email,
+      name: user.name || name || "User",
+      dob: user.dob || "N/A",
+      ssn: decryptedSSN ? "****" + decryptedSSN.slice(-2) : "N/A",
+      decryptedSSN: decryptedSSN || "N/A",
+      address: decryptedAddress || "N/A",
+      postalCode: decryptedPostalCode || "N/A",
+      state: decryptedState || "N/A",
+      isSuperAdmin: false
+    };
+
+    console.log("✅ User session created.");
+    return res.status(200).json({ message: "Session created", redirect: "/dashboard" });
+
+  } catch (error) {
+    console.error("❌ Session login error:", error.message);
+    return res.status(401).json({ error: "Unauthorized" });
+  }
 };
-  
-      console.log("✅ User session created.");
-      return res.status(200).json({ message: "Session created", redirect: "/dashboard" });
-  
-    } catch (error) {
-      console.error("❌ Session login error:", error.message);
-      return res.status(401).json({ error: "Unauthorized" });
+
+// ✅ Signup + KYC Document Upload (pure logic – toast handled in route)
+export const handleSignup = async (req) => {
+  try {
+    const {
+      idToken,
+      firstName,
+      lastName,
+      email,
+      dob,
+      ssn,
+      address,
+      postalCode,
+      state
+    } = req.body;
+
+    const name = `${firstName} ${lastName}`;
+    const file = req.file;
+
+    if (!file) throw new Error("KYC document is required.");
+
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const uid = decodedToken.uid;
+
+    const existing = await getUserById(uid);
+    if (existing) {
+      throw new Error("Email already exists.");
     }
-  };
 
-// ✅ Signup + KYC Document Upload
-export const handleSignup = async (req, res) => {
-    try {
-        const {
-            idToken,
-            firstName,
-            lastName,
-            email,
-            dob,
-            ssn,
-            address,
-            postalCode,
-            state
-        } = req.body;
+    const ext = path.extname(file.originalname);
+    const uniqueName = `kyc_docs/${uid}_${uuidv4()}${ext}`;
+    const firebaseFile = storage.file(uniqueName);
 
-        const name = `${firstName} ${lastName}`;
+    await firebaseFile.save(fs.readFileSync(file.path), {
+      metadata: {
+        contentType: file.mimetype,
+        metadata: {
+          firebaseStorageDownloadTokens: uuidv4()
+        }
+      }
+    });
 
-        const file = req.file;
-        if (!file) return res.status(400).json({ error: "KYC document is required." });
+    const [url] = await firebaseFile.getSignedUrl({
+      action: "read",
+      expires: "03-01-2030"
+    });
 
-        const decodedToken = await admin.auth().verifyIdToken(idToken);
-        const uid = decodedToken.uid;
+    fs.unlink(file.path, (err) => {
+      if (err) console.warn("⚠️ Could not delete temp file:", file.path);
+    });
 
-        const existing = await getUserById(uid);
-        if (existing) return res.status(400).json({ error: "User already exists." });
+    console.log("🔐 Raw values before encryption:", {
+      name,
+      dob,
+      ssn,
+      address,
+      postalCode,
+      state
+    });
 
-        const ext = path.extname(file.originalname);
-        const uniqueName = `kyc_docs/${uid}_${uuidv4()}${ext}`;
-        const firebaseFile = storage.file(uniqueName);
+    const encryptedAddress = encrypt(address);
+    const encryptedPostalCode = encrypt(postalCode);
+    const encryptedSSN = encrypt(ssn);
+    const encryptedState = encrypt(state);
 
-        await firebaseFile.save(fs.readFileSync(file.path), {
-            metadata: {
-                contentType: file.mimetype,
-                metadata: {
-                    firebaseStorageDownloadTokens: uuidv4()
-                }
-            }
-        });
+    await createUser(uid, {
+      name,
+      email,
+      dob,
+      ssn: encryptedSSN,
+      address: encryptedAddress,
+      postalCode: encryptedPostalCode,
+      state: encryptedState,
+      isValidated: false,
+      isBlocked: false,
+      documentUrl: url,
+      createdAt: new Date().toISOString()
+    });
 
-        const [url] = await firebaseFile.getSignedUrl({
-            action: "read",
-            expires: "03-01-2030"
-        });
+    console.log("✅ User and document stored. Awaiting admin validation.");
+    return { success: true };
 
-        fs.unlink(file.path, (err) => {
-            if (err) console.warn("⚠️ Could not delete temp file:", file.path);
-        });
-
-        console.log("🔐 Raw values before encryption:", {
-            name,
-            dob,
-            ssn,
-            address,
-            postalCode,
-            state
-        });
-
-        const encryptedAddress = encrypt(address);
-        const encryptedPostalCode = encrypt(postalCode);
-        const encryptedSSN = encrypt(ssn);
-        const encryptedState = encrypt(state);
-
-        await createUser(uid, {
-            name,
-            email,
-            dob,
-            ssn: encryptedSSN,
-            address: encryptedAddress,
-            postalCode: encryptedPostalCode,
-            state: encryptedState,
-            isValidated: false,
-            documentUrl: url,
-            createdAt: new Date().toISOString()
-        });
-
-        console.log("✅ User and document stored. Awaiting admin validation.");
-        res.status(200).json({ message: "Signup completed. Awaiting admin validation." });
-
-    } catch (err) {
-        console.error("❌ Signup error:", err.message);
-        res.status(500).json({ error: "Signup failed." });
-    }
+  } catch (err) {
+    console.error("❌ Signup error:", err.message);
+    throw new Error(err.message || "Signup failed.");
+  }
 };
 
 // 🔴 Logout
 export const logout = (req, res) => {
-    console.log("👋 Logging out...");
-    req.session.destroy((err) => {
-        if (err) {
-            console.error("❌ Logout error:", err.message);
-            return res.status(500).send("Logout error");
-        }
-        console.log("✅ Session destroyed.");
-        res.render("landing");
-    });
+  console.log("👋 Logging out...");
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("❌ Logout error:", err.message);
+      return res.status(500).send("Logout error");
+    }
+    console.log("✅ Session destroyed.");
+    res.render("landing");
+  });
 };
