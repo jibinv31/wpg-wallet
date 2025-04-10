@@ -10,6 +10,7 @@ import notificationRoutes from "./routes/notifications.routes.js";
 import { setNotificationCount } from "./middleware/notificationCount.js";
 import adminRoutes from "./routes/admin.routes.js";
 import billRoutes from "./routes/bills.routes.js";
+import analyticsRoutes from "./routes/analytics.routes.js";
 // 📦 Load environment variables
 dotenv.config();
 
@@ -60,6 +61,7 @@ app.use("/", notificationRoutes);
 app.use(setNotificationCount);
 app.use(adminRoutes);
 app.use("/",billRoutes);
+app.use("/",analyticsRoutes);
 
 // 🔁 Default route
 app.get("/", (req, res) => {

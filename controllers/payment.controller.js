@@ -137,6 +137,7 @@ export const processTransfer = async (req, res) => {
       recipientEmail,
       amount: transferAmount,
       note,
+      transferType: "transfer",
       status: "processing",
       createdAt: new Date().toISOString(),
     });
