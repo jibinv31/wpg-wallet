@@ -33,7 +33,7 @@ export const renderDashboard = async (req, res) => {
     const tenDaysAgo = new Date(now);
     tenDaysAgo.setDate(now.getDate() - 10);
 
-    // 🔹 Fetch manual transactions
+    // 🔹 Fetch manual transactions (including bill payments)
     const manualSnap = await db
       .collection("transfers")
       .where("userId", "==", uid)
@@ -42,13 +42,30 @@ export const renderDashboard = async (req, res) => {
     const manualTransactions = manualSnap.docs
       .map(doc => doc.data())
       .filter(t => new Date(t.createdAt) >= tenDaysAgo)
-      .map(t => ({
-        date: t.createdAt,
-        name: `Transfer to ${t.recipientEmail}`,
-        amount: -Math.abs(t.amount),
-        category: ["Manual Transfer"],
-        status: t.status || "success"
-      }));
+      .map(t => {
+        if (t.transferType === "bill") {
+          return {
+            date: t.createdAt,
+            name: `Bill Payment to ${t.to}`,
+            amount: -Math.abs(t.amount),
+            category: ["Bill Payment"],
+            status: t.status || "success"
+          };
+        }
+
+        const isCredit = t.type === "credit";
+        return {
+          date: t.createdAt,
+          name: isCredit
+            ? `Received from ${t.fromEmail || "Sender"}`
+            : `Transfer to ${t.recipientEmail}`,
+          amount: isCredit
+            ? Math.abs(t.amount)
+            : -Math.abs(t.amount),
+          category: ["Manual Transfer"],
+          status: t.status || "success"
+        };
+      });
 
     // 🔹 Fetch Plaid transactions
     const plaidTransactions = [];
@@ -108,17 +125,16 @@ export const renderDashboard = async (req, res) => {
   }
 };
 
-// ✅ Fixed Profile Page Controller
+// ✅ Profile Controller (unchanged)
 export const renderProfile = async (req, res) => {
   const uid = req.session?.user?.uid;
   if (!uid) return res.redirect("/login");
 
   try {
     res.render("profile", {
-      user: req.session.user, // ✅ Use session-stored, decrypted values
+      user: req.session.user,
       currentRoute: "profile"
     });
-
   } catch (error) {
     console.error("❌ Error loading profile:", error.message);
     res.status(500).send("Error loading profile page.");

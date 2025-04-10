@@ -20,7 +20,6 @@ const findRecipientAccount = async (email, accountNumber) => {
   return { id: doc.id, ...doc.data() };
 };
 
-
 // Simulate delay (e.g., 1 minute) before updating status
 const simulateTransferSuccess = async (
   transferId,
@@ -31,8 +30,6 @@ const simulateTransferSuccess = async (
   recipientEmail,
   senderEmail
 ) => {
-
-
   console.log(`⏳ Simulating delayed transfer success for ${transferId}...`);
 
   setTimeout(async () => {
@@ -81,15 +78,31 @@ const simulateTransferSuccess = async (
 
         console.log(`✅ Credited $${amount} to ${transfer.recipientEmail}`);
 
-        // 5. Create recipient notification
-        // Assumes that the recipient's linked bank document contains a field 'userId'
+        // ✅ 4. Create recipient notification
         await db.collection("notifications").add({
-          userId: recipientData.userId, // Recipient's user id
+          userId: recipientData.userId,
           message: `💰 You received $${amount.toFixed(2)} from ${senderEmail} into account ****${transfer.to}.`,
           type: "info",
           read: false,
           createdAt: new Date().toISOString(),
         });
+
+        // ✅ 5. Create credit transaction for recipient
+        await db.collection("transfers").add({
+          userId: recipientData.userId,
+          from: transfer.from,
+          fromEmail: senderEmail,
+          to: transfer.to,
+          toAccountId: recipientDoc.id,
+          recipientEmail: transfer.recipientEmail,
+          amount: transfer.amount,
+          note: transfer.note || '',
+          transferType: "transfer",
+          status: "success",
+          createdAt: new Date().toISOString(),
+          type: "credit"
+        });
+
       } else {
         console.log("⚠️ Recipient not found – skipping credit.");
       }
@@ -101,9 +114,6 @@ const simulateTransferSuccess = async (
   }, 60000); // 1 minute delay
 };
 
-
-
-
 export const processTransfer = async (req, res) => {
   const { sourceAccount, recipientEmail, recipientAccountNumber, amount, note } = req.body;
   const uid = req.session.user.uid;
@@ -114,7 +124,6 @@ export const processTransfer = async (req, res) => {
       return res.status(400).send("Missing required transfer details.");
     }
 
-    // 🔍 Get source account by Firestore doc ID
     const sourceDoc = await db.collection("linked_banks").doc(sourceAccount).get();
 
     if (!sourceDoc.exists || sourceDoc.data().userId !== uid) {
@@ -123,12 +132,10 @@ export const processTransfer = async (req, res) => {
 
     const sourceData = sourceDoc.data();
 
-    // 🛑 Ensure enough balance BEFORE creating transfer
     if (transferAmount > sourceData.balance) {
       return res.status(400).send("Insufficient balance.");
     }
 
-    // ⏳ Create transfer record (processing)
     const transferRef = await db.collection("transfers").add({
       userId: uid,
       from: sourceData.accountNumber,
@@ -140,9 +147,9 @@ export const processTransfer = async (req, res) => {
       transferType: "transfer",
       status: "processing",
       createdAt: new Date().toISOString(),
+      type: "debit"
     });
 
-    // ✅ Create initial notification
     await db.collection("notifications").add({
       userId: uid,
       message: `💸 Transfer of $${transferAmount.toFixed(2)} to ${recipientEmail} initiated.`,
@@ -151,7 +158,6 @@ export const processTransfer = async (req, res) => {
       createdAt: new Date().toISOString(),
     });
 
-    // ✅ Only simulate balance deduction after success
     simulateTransferSuccess(
       transferRef.id,
       sourceAccount,
@@ -159,11 +165,9 @@ export const processTransfer = async (req, res) => {
       transferAmount,
       uid,
       recipientEmail,
-      req.session.user.email || "unknown@example.com" // Use fallback if undefined
+      req.session.user.email || "unknown@example.com"
     );
 
-
-    // res.redirect("/transactions");
     res.json({ success: true });
 
   } catch (err) {
@@ -171,6 +175,3 @@ export const processTransfer = async (req, res) => {
     res.status(500).send("Transfer failed.");
   }
 };
-
-
-

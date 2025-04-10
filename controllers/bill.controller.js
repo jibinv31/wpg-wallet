@@ -2,27 +2,23 @@
 import { db } from "../services/firebase.js";
 import { getUnreadNotificationCount } from "../utils/notifications.js";
 
-
-
 export const renderBillPaymentPage = async (req, res) => {
-    const uid = req.session?.user?.uid;
-    if (!uid) return res.redirect("/login");
-  
-    const banksSnap = await db.collection("linked_banks").where("userId", "==", uid).get();
-    const accounts = banksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  
-    const billersSnap = await db.collection("saved_billers").where("userId", "==", uid).get();
-    const savedBillers = billersSnap.docs.map(doc => doc.data());
-  
-    res.render("bill-payment", {
-      user: req.session.user,
-      accounts,
-      savedBillers,
-      notificationCount: await getUnreadNotificationCount(uid),
-    });
-  };
-  
-  
+  const uid = req.session?.user?.uid;
+  if (!uid) return res.redirect("/login");
+
+  const banksSnap = await db.collection("linked_banks").where("userId", "==", uid).get();
+  const accounts = banksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+  const billersSnap = await db.collection("saved_billers").where("userId", "==", uid).get();
+  const savedBillers = billersSnap.docs.map(doc => doc.data());
+
+  res.render("bill-payment", {
+    user: req.session.user,
+    accounts,
+    savedBillers,
+    notificationCount: await getUnreadNotificationCount(uid),
+  });
+};
 
 export const payBill = async (req, res) => {
   const { billType, provider, consumerId, amount, note, sourceAccount } = req.body;
@@ -50,7 +46,7 @@ export const payBill = async (req, res) => {
       balance: accountData.balance - billAmount
     });
 
-    // Save to transfers collection instead of "bills"
+    // Save to transfers collection (with type and category added)
     await db.collection("transfers").add({
       userId: uid,
       from: accountData.accountNumber,
@@ -64,19 +60,21 @@ export const payBill = async (req, res) => {
       consumerId,
       status: "success",
       createdAt: new Date().toISOString(),
-      completedAt: new Date().toISOString()
+      completedAt: new Date().toISOString(),
+      type: "debit",                       // ✅ NEW: for dashboard display
+      category: ["Bill Payment"]          // ✅ NEW: for filtering/labeling
     });
 
-    // ✅ Save biller if user wants to
-if (req.body.saveBiller === "true") {
-    await db.collection("saved_billers").add({
-      userId: uid,
-      billType,
-      provider,
-      consumerId,
-      createdAt: new Date().toISOString()
-    });
-  }
+    // ✅ Save biller if user checked "Save Biller"
+    if (req.body.saveBiller === "true") {
+      await db.collection("saved_billers").add({
+        userId: uid,
+        billType,
+        provider,
+        consumerId,
+        createdAt: new Date().toISOString()
+      });
+    }
 
     // Optional: Notification
     await db.collection("notifications").add({
