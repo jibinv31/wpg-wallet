@@ -19,6 +19,7 @@ export const renderBillPaymentPage = async (req, res) => {
       accounts,
       savedBillers,
       notificationCount: await getUnreadNotificationCount(uid),
+      currentRoute: "bill-payment"
     });
   };
   
