@@ -1,5 +1,5 @@
-// controllers/analytics.controller.js
 import { db } from "../services/firebase.js";
+import { getUnreadNotificationCount } from "../utils/notifications.js";
 
 // Show spending + savings analytics page
 export const renderSpendingAnalytics = async (req, res) => {
@@ -60,9 +60,12 @@ export const renderSpendingAnalytics = async (req, res) => {
 
     console.log("📊 Transfers fetched for analytics:", transfers);
 
+
+    const notificationCount = await getUnreadNotificationCount(uid);
+
     res.render("spending-analytics", {
       user: req.session.user,
-      notificationCount: 0,
+      notificationCount,
       chartData,
       savingsChartData,
       totalSpent: Object.values(categoryMap).reduce((a, b) => a + b, 0),
