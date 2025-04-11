@@ -3,11 +3,10 @@ import { plaidClient } from "../services/plaid.js";
 import { decrypt } from "../utils/encryption.js";
 import { Parser } from "json2csv";
 
-// 🔄 Combine manual + Plaid transactions (both debit & credit)
+// 🔄 Combine manual + Plaid transactions
 const getCombinedTransactions = async (userId, accountId, startDate, endDate, category) => {
     const allTxns = [];
 
-    // 🔹 Manual Transfers (debits + credits)
     const transferSnap = await db.collection("transfers")
         .where("userId", "==", userId)
         .get();
@@ -20,22 +19,31 @@ const getCombinedTransactions = async (userId, accountId, startDate, endDate, ca
         const categoryMatch = !category || (tx.category && tx.category.includes(category));
 
         if (inRange && accountMatch && categoryMatch) {
-            const isCredit = tx.type === "credit";
-            allTxns.push({
-                date: tx.createdAt,
-                name: isCredit
-                    ? `Received from ${tx.fromEmail || "Sender"}`
-                    : `Transfer to ${tx.recipientEmail}`,
-                amount: isCredit
-                    ? Math.abs(tx.amount)
-                    : -Math.abs(tx.amount),
-                category: ["Manual Transfer"],
-                status: tx.status || "success"
-            });
+            if (tx.transferType === "bill") {
+                allTxns.push({
+                    date: tx.createdAt,
+                    name: `Bill Payment to ${tx.to}`,
+                    amount: -Math.abs(tx.amount),
+                    category: ["Bill Payment"],
+                    status: tx.status || "success"
+                });
+            } else {
+                const isCredit = tx.type === "credit";
+                allTxns.push({
+                    date: tx.createdAt,
+                    name: isCredit
+                        ? `Received from ${tx.fromEmail || "Sender"}`
+                        : `Transfer to ${tx.recipientEmail}`,
+                    amount: isCredit
+                        ? Math.abs(tx.amount)
+                        : -Math.abs(tx.amount),
+                    category: ["Manual Transfer"],
+                    status: tx.status || "success"
+                });
+            }
         }
     });
 
-    // 🔹 Fetch Plaid-linked accounts
     const accountsSnap = await db.collection("linked_banks")
         .where("userId", "==", userId)
         .get();
