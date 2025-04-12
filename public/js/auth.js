@@ -137,7 +137,6 @@ if (signupForm) {
         } catch (err) {
             console.error("Signup Error:", err);
 
-            // Handle Firebase client-side email already in use error
             if (err.code === "auth/email-already-in-use") {
                 window.location.href = "/signup?error=email-already-in-use";
             } else {
@@ -147,8 +146,9 @@ if (signupForm) {
     });
 }
 
-// 🚀 Google Sign-In
+// 🚀 Google Sign-In (Smart Route Handling)
 const googleBtn = document.getElementById("googleLogin");
+
 if (googleBtn) {
     googleBtn.addEventListener("click", async () => {
         try {
@@ -156,18 +156,38 @@ if (googleBtn) {
             const idToken = await result.user.getIdToken();
             const name = result.user.displayName || "Google User";
 
-            const res = await fetch("/sessionLogin", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ idToken, name })
-            });
+            const isSignupPage = window.location.pathname === "/signup";
 
-            const data = await res.json();
+            if (isSignupPage) {
+                // New Google user → send to complete-profile
+                const res = await fetch("/google-complete-profile-start", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ idToken, name })
+                });
 
-            if (res.ok) {
-                window.location.href = data.redirect || "/dashboard";
+                const data = await res.json();
+
+                if (res.ok) {
+                    window.location.href = "/complete-profile";
+                } else {
+                    showToast(data.error || "Could not begin Google signup.");
+                }
             } else {
-                showToast(data.error || "Google login failed. Try again.");
+                // Login flow
+                const res = await fetch("/sessionLogin", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ idToken, name })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    window.location.href = data.redirect || "/dashboard";
+                } else {
+                    showToast(data.error || "Google login failed. Try again.");
+                }
             }
         } catch (err) {
             console.error("Google Login Error:", err.message);

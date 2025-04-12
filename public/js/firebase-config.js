@@ -1,6 +1,14 @@
 // Firebase Web SDK (client-side only)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import {
+    getAuth,
+    signInWithEmailAndPassword,
+    signOut,
+    createUserWithEmailAndPassword,
+    GoogleAuthProvider,
+    signInWithPopup,
+    sendPasswordResetEmail // ✅ Import this to fix the forgot password error
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 // Firebase Config (use yours from console)
 const firebaseConfig = {
@@ -18,4 +26,13 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-export { auth, provider, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, signInWithPopup };
+// ✅ Export all required methods
+export {
+    auth,
+    provider,
+    signInWithEmailAndPassword,
+    signOut,
+    createUserWithEmailAndPassword,
+    signInWithPopup,
+    sendPasswordResetEmail // ✅ This export resolves the module error
+};
