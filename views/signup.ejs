@@ -120,7 +120,6 @@
                             <span class="password-toggle" onclick="togglePassword('password')">👁️</span>
                         </div>
 
-                        <!-- ✅ KYC Document Upload -->
                         <div class="mb-4">
                             <label for="kycDocument">Upload KYC Document</label>
                             <input type="file" class="form-control" name="kycDocument" accept=".pdf,.png,.jpg,.jpeg"
@@ -159,7 +158,6 @@
                     input.type = input.type === "password" ? "text" : "password";
                 }
 
-                // ✅ Bootstrap Toast Initialization
                 window.addEventListener("DOMContentLoaded", () => {
                     const toastEl = document.getElementById("signupToast");
                     if (toastEl) {
@@ -169,9 +167,31 @@
                 });
             </script>
 
-            <!-- Firebase Auth for Google Signup -->
+            <!-- ✅ Firebase Google Signup with Toast -->
             <script type="module">
                 import { auth, provider, signInWithPopup } from "/js/firebase-config.js";
+
+                function showToast(message, isSuccess = false) {
+                    const toastContainer = document.createElement("div");
+                    toastContainer.className = "toast-container position-fixed top-0 end-0 p-3";
+                    toastContainer.style.zIndex = "1050";
+
+                    const toast = document.createElement("div");
+                    toast.className = `toast align-items-center text-white ${isSuccess ? "bg-success" : "bg-danger"} show`;
+                    toast.role = "alert";
+
+                    toast.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">${message}</div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      `;
+
+                    toastContainer.appendChild(toast);
+                    document.body.appendChild(toastContainer);
+
+                    setTimeout(() => toastContainer.remove(), 5000);
+                }
 
                 const googleBtn = document.getElementById("googleSignup");
 
@@ -194,12 +214,11 @@
                             if (response.ok && data.redirect) {
                                 window.location.href = data.redirect;
                             } else {
-                                alert(data.error || "Google signup failed.");
+                                showToast(data.error || "Google signup failed.");
                             }
-
                         } catch (err) {
                             console.error("Google Signup Error:", err.message);
-                            alert("Google signup failed. Try again.");
+                            showToast("Google signup failed. Try again.");
                         }
                     });
                 }
