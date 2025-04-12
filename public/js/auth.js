@@ -17,10 +17,10 @@ function showToast(message, isSuccess = false) {
     toast.role = "alert";
 
     toast.innerHTML = `
-      <div class="d-flex">
-        <div class="toast-body">${message}</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
     `;
 
     toastContainer.appendChild(toast);
@@ -68,7 +68,7 @@ if (loginForm) {
             }
         } catch (err) {
             console.error("Login Error:", err.message);
-            showToast("Invalid login credentials");
+            showToast("Invalid login credentials.");
         }
     });
 }
@@ -138,9 +138,9 @@ if (signupForm) {
             console.error("Signup Error:", err);
 
             if (err.code === "auth/email-already-in-use") {
-                window.location.href = "/signup?error=email-already-in-use";
+                showToast("Email already exists. Please login or use another email.");
             } else {
-                window.location.href = "/signup?error=signup-failed";
+                showToast("Signup failed. Please try again.");
             }
         }
     });
@@ -159,7 +159,7 @@ if (googleBtn) {
             const isSignupPage = window.location.pathname === "/signup";
 
             if (isSignupPage) {
-                // New Google user → send to complete-profile
+                // Google Sign-Up Flow
                 const res = await fetch("/google-complete-profile-start", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -171,10 +171,10 @@ if (googleBtn) {
                 if (res.ok) {
                     window.location.href = "/complete-profile";
                 } else {
-                    showToast(data.error || "Could not begin Google signup.");
+                    showToast(data.error || "Google signup failed. Try again.");
                 }
             } else {
-                // Login flow
+                // Google Login Flow
                 const res = await fetch("/sessionLogin", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
