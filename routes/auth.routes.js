@@ -134,16 +134,41 @@ router.get("/profile", requireAuth, renderProfile);
 // 🔐 MFA: Send OTP
 router.post("/send-otp", async (req, res) => {
   const { email } = req.body;
+
   if (!email) return res.status(400).json({ success: false, message: "Email required" });
 
   try {
+    // 🔐 Validate user exists
+    let userExists = false;
+
+    try {
+      await admin.auth().getUserByEmail(email);
+      userExists = true;
+    } catch (_) {
+      const snap = await db.collection("super_admins")
+        .where("email", "==", email)
+        .limit(1)
+        .get();
+      userExists = !snap.empty;
+    }
+
+    if (!userExists) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // 📥 Save email in session for verification use
+    req.session.otpEmail = email;
+
+    // 📧 Send OTP via Firestore + Email
     await sendOTPviaEmail(email);
-    res.json({ success: true, message: "OTP sent" });
+
+    return res.json({ success: true, message: "OTP sent" });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Failed to send OTP" });
+    console.error("❌ OTP error:", err.message);
+    return res.status(500).json({ success: false, message: "Failed to send OTP" });
   }
 });
+
 
 // 🔐 OTP Verification Page
 router.get("/verify-otp", (req, res) => {
