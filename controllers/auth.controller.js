@@ -6,6 +6,7 @@ import fs from "fs";
 import { decrypt, encrypt } from "../utils/encryption.js";
 import { sendOTPEmail } from "../utils/email.js";
 import { verifyOTPCode } from "../utils/otp.js";
+import { getAuth } from "firebase-admin/auth";
 
 // ✅ Session Login (handles both normal users and super admins)
 export const sessionLogin = async (req, res) => {
@@ -23,10 +24,6 @@ export const sessionLogin = async (req, res) => {
     if (!otp && signInProvider !== "google.com") {
       return res.status(400).json({ error: "OTP is required" });
     }
-
-    // 🔐 OTP validation placeholder
-    // const isOTPValid = await verifyOTPCode(email, otp);
-    // if (!isOTPValid) return res.status(401).json({ error: "Invalid OTP" });
 
     // 🔍 Check if super admin
     const superAdminSnap = await db.collection("super_admins").doc(uid).get();
@@ -198,4 +195,31 @@ export const logout = (req, res) => {
     console.log("✅ Session destroyed.");
     res.render("landing");
   });
+};
+
+// 🔁 Forgot Password: Render Form
+export const renderForgotPasswordPage = (req, res) => {
+  res.render("forgot-password", { message: null });
+};
+
+// 🔁 Forgot Password: Handle Submission
+export const handleForgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const link = await getAuth().generatePasswordResetLink(email);
+
+    console.log("📩 Password reset link:", link);
+
+    res.render("forgot-password", {
+      message: `✅ A password reset link has been sent to ${email}.`,
+    });
+
+    // Optional: You can email this link to the user via nodemailer
+  } catch (error) {
+    console.error("❌ Error generating password reset link:", error.message);
+    res.render("forgot-password", {
+      message: "❌ Failed to send password reset link. Please try again.",
+    });
+  }
 };
