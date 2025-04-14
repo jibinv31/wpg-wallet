@@ -1,18 +1,14 @@
-// utils/otp.js
 import nodemailer from "nodemailer";
 import { db } from "../services/firebase.js";
-import crypto from "crypto";
 
-// ✅ Generate a random 6-digit code
-const generateOTP = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-};
+const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-// ✅ Send OTP Email
-export const sendOTPEmail = async (email) => {
+export const sendOTPviaEmail = async (email) => {
+  if (!email || typeof email !== "string") throw new Error("Invalid email");
+
   const otp = generateOTP();
 
-  // Save to Firestore with timestamp
+  // Store in Firestore (or just in session if you prefer)
   await db.collection("otp_codes").doc(email).set({
     otp,
     createdAt: new Date().toISOString(),
@@ -26,34 +22,28 @@ export const sendOTPEmail = async (email) => {
     },
   });
 
-  const mailOptions = {
-    from: `WPG-Wallet <${process.env.MAIL_USER}>`,
+  await transporter.sendMail({
+    from: `WPG-Wallet <${process.env.GMAIL_USER}>`,
     to: email,
-    subject: "Your OTP Code for WPG-Wallet",
-    html: `<p>Your OTP is <strong>${otp}</strong>. It is valid for 5 minutes.</p>`
-  };
+    subject: "Your OTP Code",
+    html: `<p>Your OTP is <strong>${otp}</strong>. It is valid for 5 minutes.</p>`,
+  });
 
-  await transporter.sendMail(mailOptions);
-  console.log(`📧 OTP sent to ${email}`);
+  console.log(`📧 OTP sent to ${email}: ${otp}`);
 };
 
-// ✅ Verify OTP
-export const verifyOTPCode = async (email, code) => {
+export const verifyOTPCode = async (email, enteredOtp) => {
   const doc = await db.collection("otp_codes").doc(email).get();
-
   if (!doc.exists) return false;
 
-  const data = doc.data();
-  if (data.otp !== code) return false;
-
+  const { otp, createdAt } = doc.data();
   const now = new Date();
-  const createdAt = new Date(data.createdAt);
-  const diffMinutes = (now - createdAt) / 1000 / 60;
+  const created = new Date(createdAt);
+  const diffMinutes = (now - created) / 1000 / 60;
 
-  // 🔒 Only valid for 5 minutes
   if (diffMinutes > 5) return false;
+  if (otp !== enteredOtp) return false;
 
-  // ✅ Optional: delete OTP after use
-  await db.collection("otp_codes").doc(email).delete();
+  await db.collection("otp_codes").doc(email).delete(); // one-time use
   return true;
 };

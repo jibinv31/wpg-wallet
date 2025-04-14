@@ -21,6 +21,13 @@ export const sessionLogin = async (req, res) => {
 
     console.log(`✅ Verified token for user: ${email} (UID: ${uid})`);
 
+    if (signInProvider !== "google.com") {
+      const isValid = await verifyOTPCode(email, otp);
+      if (!isValid) {
+        return res.status(403).json({ error: "Invalid or expired OTP" });
+      }
+    }    
+
     if (!otp && signInProvider !== "google.com") {
       return res.status(400).json({ error: "OTP is required" });
     }

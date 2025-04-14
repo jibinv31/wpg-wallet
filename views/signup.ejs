@@ -58,9 +58,12 @@
 
             <div class="container d-flex align-items-center justify-content-center min-vh-100">
                 <div class="w-100 d-flex justify-content-center">
+        
                     <!-- Signup Form -->
-                    <form id="signupForm" class="form-section" method="POST" action="/auth/signup"
+                    <form id="signupForm" class="form-section" method="POST" action="/signup"
                         enctype="multipart/form-data">
+                        <input type="hidden" id="idTokenInput" name="idToken" />
+
                         <h3 class="mb-4">Sign up</h3>
 
                         <div class="row">
@@ -169,60 +172,93 @@
 
             <!-- ✅ Firebase Google Signup with Toast -->
             <script type="module">
-                import { auth, provider, signInWithPopup } from "/js/firebase-config.js";
-
+                import {
+                  auth,
+                  createUserWithEmailAndPassword,
+                  provider,
+                  signInWithPopup
+                } from "/js/firebase-config.js";
+              
+                // Show toast for errors
                 function showToast(message, isSuccess = false) {
-                    const toastContainer = document.createElement("div");
-                    toastContainer.className = "toast-container position-fixed top-0 end-0 p-3";
-                    toastContainer.style.zIndex = "1050";
-
-                    const toast = document.createElement("div");
-                    toast.className = `toast align-items-center text-white ${isSuccess ? "bg-success" : "bg-danger"} show`;
-                    toast.role = "alert";
-
-                    toast.innerHTML = `
-        <div class="d-flex">
-          <div class="toast-body">${message}</div>
-          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-      `;
-
-                    toastContainer.appendChild(toast);
-                    document.body.appendChild(toastContainer);
-
-                    setTimeout(() => toastContainer.remove(), 5000);
+                  const toastContainer = document.createElement("div");
+                  toastContainer.className = "toast-container position-fixed top-0 end-0 p-3";
+                  toastContainer.style.zIndex = "1050";
+              
+                  const toast = document.createElement("div");
+                  toast.className = `toast align-items-center text-white ${isSuccess ? "bg-success" : "bg-danger"} show`;
+                  toast.role = "alert";
+              
+                  toast.innerHTML = `
+                    <div class="d-flex">
+                      <div class="toast-body">${message}</div>
+                      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                  `;
+              
+                  toastContainer.appendChild(toast);
+                  document.body.appendChild(toastContainer);
+              
+                  setTimeout(() => toastContainer.remove(), 5000);
                 }
-
+              
+                const form = document.getElementById("signupForm");
+                const idTokenInput = document.getElementById("idTokenInput");
+              
+                form.addEventListener("submit", async (e) => {
+                  e.preventDefault(); // Stop form from submitting immediately
+              
+                  const email = form.email.value;
+                  const password = form.password.value;
+              
+                  try {
+                    // 1. Create the user in Firebase Auth
+                    const result = await createUserWithEmailAndPassword(auth, email, password);
+              
+                    // 2. Get the idToken from Firebase
+                    const idToken = await result.user.getIdToken();
+              
+                    // 3. Add it to the form
+                    idTokenInput.value = idToken;
+              
+                    // 4. Now submit the form
+                    form.submit();
+                  } catch (err) {
+                    console.error("Firebase Signup Error:", err.message);
+                    showToast("Signup failed: " + err.message);
+                  }
+                });
+              
+                // Google Signup (already in your code, reused here)
                 const googleBtn = document.getElementById("googleSignup");
-
                 if (googleBtn) {
-                    googleBtn.addEventListener("click", async () => {
-                        try {
-                            const result = await signInWithPopup(auth, provider);
-                            const idToken = await result.user.getIdToken();
-                            const name = result.user.displayName || "Google User";
-                            const email = result.user.email;
-
-                            const response = await fetch("/google-complete-profile", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ idToken, name, email })
-                            });
-
-                            const data = await response.json();
-
-                            if (response.ok && data.redirect) {
-                                window.location.href = data.redirect;
-                            } else {
-                                showToast(data.error || "Google signup failed.");
-                            }
-                        } catch (err) {
-                            console.error("Google Signup Error:", err.message);
-                            showToast("Google signup failed. Try again.");
-                        }
-                    });
+                  googleBtn.addEventListener("click", async () => {
+                    try {
+                      const result = await signInWithPopup(auth, provider);
+                      const idToken = await result.user.getIdToken();
+                      const name = result.user.displayName || "Google User";
+                      const email = result.user.email;
+              
+                      const response = await fetch("/google-complete-profile", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ idToken, name, email })
+                      });
+              
+                      const data = await response.json();
+                      if (response.ok && data.redirect) {
+                        window.location.href = data.redirect;
+                      } else {
+                        showToast(data.error || "Google signup failed.");
+                      }
+                    } catch (err) {
+                      console.error("Google Signup Error:", err.message);
+                      showToast("Google signup failed. Try again.");
+                    }
+                  });
                 }
-            </script>
+              </script>
+              
 
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

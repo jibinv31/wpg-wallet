@@ -14,8 +14,8 @@ import {
 } from "../controllers/completeProfile.controller.js";
 
 import { renderDashboard, renderProfile } from "../controllers/dashboard.controller.js";
-import { sendOTPEmail } from "../utils/otp.js";
 import { getUserByEmail } from "../models/user.model.js";
+import { sendOTPviaEmail } from "../utils/otp.js";
 
 const router = express.Router();
 const upload = multer({ dest: os.tmpdir() });
@@ -134,33 +134,14 @@ router.get("/profile", requireAuth, renderProfile);
 // 🔐 MFA: Send OTP
 router.post("/send-otp", async (req, res) => {
   const { email } = req.body;
+  if (!email) return res.status(400).json({ success: false, message: "Email required" });
 
   try {
-    let userExists = false;
-
-    try {
-      await admin.auth().getUserByEmail(email);
-      userExists = true;
-    } catch (_) {
-      const snap = await db.collection("super_admins")
-        .where("email", "==", email)
-        .limit(1)
-        .get();
-      userExists = !snap.empty;
-    }
-
-    if (!userExists) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found or not registered.",
-      });
-    }
-
-    await sendOTPEmail(email);
-    return res.json({ success: true, message: "OTP sent successfully" });
+    await sendOTPviaEmail(email);
+    res.json({ success: true, message: "OTP sent" });
   } catch (err) {
-    console.error("Error sending OTP:", err.message);
-    return res.status(500).json({ success: false, message: "Failed to send OTP" });
+    console.error(err);
+    res.status(500).json({ success: false, message: "Failed to send OTP" });
   }
 });
 
@@ -174,7 +155,9 @@ router.get("/verify-otp", (req, res) => {
 router.post("/verify-otp", (req, res) => {
   const { otp } = req.body;
 
-  if (otp === req.session.otp && req.session.tempUser) {
+  // if (otp === req.session.otp && req.session.tempUser) {
+    if (String(otp).trim() === String(req.session.otp).trim() && req.session.tempUser)
+      {
     const { uid, email, name } = req.session.tempUser;
     req.session.user = { uid, email, name };
     delete req.session.tempUser;
