@@ -2,94 +2,380 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WPG Wallet - Digital Banking</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WPG Wallet - Secure Digital Wallet</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
     }
     .hero {
-      background: linear-gradient(to right, #3b82f6, #1e3a8a);
-      color: white;
-      padding: 100px 0;
+      background-color: #f4f6f9;
+      padding: 5rem 0;
+      text-align: center;
     }
-    .features i {
+    .feature-icon {
       font-size: 2rem;
       color: #3b82f6;
     }
-    .cta {
-      background-color: #f8f9fa;
-      padding: 60px 0;
+    .feature-box {
+      padding: 2rem;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      height: 100%;
     }
-    .footer {
-      background-color: #1e3a8a;
+    .mockup {
+      max-width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    .dark-section {
+      background: #0f0f11;
       color: white;
-      padding: 30px 0;
+      padding: 5rem 0;
+    }
+    .testimonial-section {
+      background: #f4f6f9;
+      padding: 4rem 0;
+    }
+    .testimonial {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      height: 100%;
     }
   </style>
 </head>
 <body>
 
-<!-- Navigation -->
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+  <!-- Navigation Bar -->
+<!-- Refined Navigation Bar -->
+<nav class="navbar navbar-expand-lg" style="background-color: #3b82f6;">
   <div class="container">
-    <a class="navbar-brand fw-bold text-primary" href="#">WPG Wallet</a>
-    <div>
-      <a href="/login" class="btn btn-outline-primary me-2">Login</a>
-      <a href="/signup" class="btn btn-primary">Get Started</a>
+    <a class="navbar-brand fw-bold text-white" href="/">WPG Wallet</a>
+    <button class="navbar-toggler text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav">
+        <!-- <li class="nav-item">
+          <a class="nav-link text-white" href="/login">Login</a>
+        </li> -->
+        <li class="nav-item">
+          <a class="btn btn-light text-primary fw-semibold ms-3" href="/login">Login</a>
+        </li>
+      </ul>
     </div>
   </div>
 </nav>
 
-<!-- Hero Section -->
-<section class="hero text-center">
-  <div class="container">
-    <h1 class="display-4 fw-bold">A Smarter Way to Bank</h1>
-    <p class="lead mt-3">Manage your money, transfer funds, and connect with banks all in one place.</p>
-    <a href="/signup" class="btn btn-light btn-lg mt-4">Create Account</a>
-  </div>
-</section>
 
-<!-- Features Section -->
-<section class="features py-5">
+  <!-- Hero Section -->
+  <!-- <section class="hero">
+    <div class="container">
+      <h1 class="display-4 fw-bold">Your Secure Digital Wallet</h1>
+      <p class="lead mb-4">Manage your finances, pay bills, and link banks securely — all in one place.</p>
+      <a href="/signup" class="btn btn-primary btn-lg">Get Started</a>
+    </div>
+  </section> -->
+
+  <section class="hero">
   <div class="container">
-    <div class="row text-center">
-      <div class="col-md-4">
-        <i class="bi bi-shield-lock"></i>
-        <h5 class="mt-3">Secure Banking</h5>
-        <p>Your data and transactions are protected with top-tier encryption and authentication.</p>
+    <div class="row align-items-center">
+      <div class="col-md-6 text-center text-md-start">
+        <h1 class="display-4 fw-bold">Your Secure Digital Wallet</h1>
+        <p class="lead mb-4">Manage your finances, pay bills, and link banks securely — all in one place.</p>
+        <a href="/signup" class="btn btn-primary btn-lg">Get Started</a>
       </div>
-      <div class="col-md-4">
-        <i class="bi bi-lightning"></i>
-        <h5 class="mt-3">Instant Transfers</h5>
-        <p>Send and receive money in seconds with minimal effort and maximum reliability.</p>
-      </div>
-      <div class="col-md-4">
-        <i class="bi bi-bank"></i>
-        <h5 class="mt-3">Bank Integrations</h5>
-        <p>Link and manage multiple bank accounts effortlessly through our secure platform.</p>
+      <div class="col-md-6 text-center mt-4 mt-md-0">
+        <img src="/images/one.svg" alt="Secure Wallet Illustration" class="img-fluid" style="max-height: 320px;">
       </div>
     </div>
   </div>
 </section>
 
-<!-- CTA Section -->
-<section class="cta text-center">
+
+  <!-- Features -->
+  <section class="py-5">
+    <div class="container">
+      <div class="row text-center mb-4">
+        <h2 class="fw-bold">Why Choose WPG Wallet?</h2>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="feature-box">
+            <img src="/images/auth.svg" alt="Secure Login" class="img-fluid mb-3" style="height: 100px;">
+            <h5>Secure MFA Login</h5>
+            <p>Keep your account safe with OTP and multi-factor authentication.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-box">
+            <img src="/images/bank.svg" alt="Bank Linking" class="img-fluid mb-3" style="height: 100px;">
+            <h5>Bank Linking</h5>
+            <p>Connect multiple bank accounts and manage your finances in one dashboard.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-box">
+            <img src="/images/payments.svg" alt="Bill payments" class="img-fluid mb-3" style="height: 100px;">
+            <h5>Bill Payments</h5>
+            <p>Pay utility, mobile, and internet bills with ease directly from your wallet.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- App Mockup -->
+  <section class="py-5 bg-light">
+    <div class="container text-center">
+      <h2 class="mb-4 fw-bold">Take Control of Your Money</h2>
+      <img src="/images/dashboard.svg" alt="Dashboard" class="img-fluid mb-3" style="height: 360px;">
+    </div>
+  </section>
+
+  <!-- Feature Highlight Section Dark -->
+  <section class="dark-section">
+    <div class="container">
+      <div class="row align-items-center mb-5">
+        <div class="col-md-6">
+          <h2 class="fw-bold text-white">Privacy by default with virtual cards that shield your payment information.</h2>
+          <p>Protect yourself and your private data from breaches and fraud. WPG Wallet uses anonymized payment layers to secure your financial info.</p>
+        </div>
+        <div class="col-md-6 text-center">
+          <img src="/images/sheild.svg" class="img-fluid" alt="Virtual Card Illustration">
+        </div>
+      </div>
+
+      <div class="row align-items-center">
+        <div class="col-md-6 text-center">
+          <img src="/images/safe.svg" class="img-fluid" alt="Security Design Illustration">
+        </div>
+        <div class="col-md-6">
+          <h2 class="fw-bold text-white">Secure by design with merchant locking and advanced data protection.</h2>
+          <p>WPG Wallet cards support locking to merchants and categories for added control. Fully PCI-DSS compliant and encrypted end-to-end.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Additional Features -->
+  <section class="py-5">
+    <div class="container">
+      <div class="row align-items-center mb-5">
+        <div class="col-md-6">
+          <h3>Customize Your Experience with <strong>WPG Wallet </strong>Virtual Cards</h3>
+          <p>Whether you need a single-use card for one-time purchases or a merchant-locked card for subscriptions, WPG Wallet puts flexible payment control in your hands.</p>
+          <a href="#" class="btn btn-dark btn-sm">Explore WPG Wallet →</a>
+        </div>
+        <div class="col-md-6 text-center">
+          <img src="/images/choice.svg" class="img-fluid rounded" alt="Virtual Card Options">
+        </div>
+      </div>
+      <div class="row align-items-center mb-5">
+        <div class="col-md-6 text-center">
+          <img src="/images/budget.svg" class="img-fluid rounded" alt="Spend Limit">
+        </div>
+        <div class="col-md-6">
+          <h3>Set Smart Spending Limits with <strong>WPG Wallet</strong></h3>
+          <p>Stay on budget by setting transaction or monthly spend limits for each card. WPG Wallet helps you prevent overspending and manage your money with confidence.</p>
+          <a href="#" class="btn btn-dark btn-sm">Learn How Spend Limits Work →</a>
+        </div>
+      </div>
+      <div class="row align-items-center mb-5">
+        <div class="col-md-6">
+          <h3>Control Access with Pause or Close Options in <strong>WPG Wallet</strong> at Any Time</h3>
+          <p>Instantly pause or deactivate cards anytime—perfect for managing subscriptions or stopping unwanted charges without canceling your whole account.</p>
+          <a href="#" class="btn btn-dark btn-sm">Learn More →</a>
+        </div>
+        <div class="col-md-6 text-center">
+          <img src="/images/cancel.svg" class="img-fluid rounded" alt="Pause Card">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="text-center py-5">
+    <div class="container">
+      <p class="fs-4 fw-bold">We protect the payments of more than <span class="text-primary">250,000 users</span> and have processed more than $3B using bank-level security & encryption.</p>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section class="testimonial-section">
+    <div class="container">
+      <div class="row text-center mb-5">
+        <h2 class="fw-bold">What Our Users Are Saying</h2>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="testimonial">
+            <p class="fw-bold">“Fantastic app. It makes online transactions feel much more secure. A must-have!”</p>
+            <p class="text-muted">— Karthika</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="testimonial">
+            <p class="fw-bold">“Finally, full control over spending and subscriptions. Game changer!”</p>
+            <p class="text-muted">— Jibin</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="testimonial">
+            <p class="fw-bold">“The card pause feature saved me from fraud — twice. So thankful!”</p>
+            <p class="text-muted">— Joby</p>
+          </div>
+        </div>
+      </div>
+      <div class="row g-4 mt-4">
+        <div class="col-md-4">
+          <div class="testimonial">
+            <p class="fw-bold">“Top-notch customer support and clear UI. I recommend it to all my friends.”</p>
+            <p class="text-muted">— Krishnakumar</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="testimonial">
+            <p class="fw-bold">“Perfect for budgeters. Love the analytics and category control!”</p>
+            <p class="text-muted">— Harish</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="testimonial">
+            <p class="fw-bold">“Set it up in 2 mins and never looked back. Reliable and fast.”</p>
+            <p class="text-muted">— Jay</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to Action -->
+  <section class="py-5 text-center">
+    <div class="container">
+      <h3 class="fw-bold mb-3">Ready to get started?</h3>
+      <a href="/signup" class="btn btn-primary btn-lg" style="background-color: #3b82f6; border-color: #3b82f6;">
+        Create Your Free Account
+      </a>      
+    </div>
+  </section>
+
+<!-- Add this inside the <body> tag, right before the footer -->
+
+<!-- FAQ Section -->
+<section class="py-5 bg-light">
   <div class="container">
-    <h2 class="fw-bold">Get Started with WPG Wallet</h2>
-    <p class="lead">Create your account now and experience modern, secure, and simple digital banking.</p>
-    <a href="/signup" class="btn btn-primary btn-lg">Join Now</a>
+    <h2 class="fw-bold text-center mb-4">Frequently Asked Questions</h2>
+    <p class="text-center text-muted mb-5">
+      Our basic plan has no fees on domestic transactions* because, like other card companies, we collect transaction fees from merchants.
+    </p>
+
+    <div class="accordion" id="faqAccordion">
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="faq1">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">
+            What is a virtual card and what is a WPG Wallet Card?
+          </button>
+        </h2>
+        <div id="collapse1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+          <div class="accordion-body">
+            A virtual card is a secure digital payment card used for online transactions. WPG Wallet Cards allow you to shop online without revealing your actual bank account or debit card details.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="faq2">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">
+            Why should I use WPG Wallet virtual cards over my debit card or credit card?
+          </button>
+        </h2>
+        <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+          <div class="accordion-body">
+            WPG Wallet virtual cards offer more privacy and control. You can limit spending, lock to specific merchants, and cancel cards instantly—helping prevent fraud or unwanted charges.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="faq3">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">
+            Why does WPG Wallet need my personal information when I’m signing up?
+          </button>
+        </h2>
+        <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+          <div class="accordion-body">
+            To comply with banking regulations and to keep your account secure, we require basic personal identification like your name and email. We do not share your data with third parties.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="faq4">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4">
+            How does WPG Wallet make money?
+          </button>
+        </h2>
+        <div id="collapse4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+          <div class="accordion-body">
+            We collect a small transaction fee from merchants every time you make a payment using WPG Wallet—so our service stays free for users.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="faq5">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse5">
+            Does using WPG Wallet affect my credit score?
+          </button>
+        </h2>
+        <div id="collapse5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+          <div class="accordion-body">
+            No. WPG Wallet is not a credit product—it does not involve credit checks or reports and has zero impact on your credit score.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="faq6">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse6">
+            Is WPG Wallet safe to use?
+          </button>
+        </h2>
+        <div id="collapse6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+          <div class="accordion-body">
+            Yes! We use end-to-end encryption, bank-level security protocols, and PCI-DSS compliance to keep your data and transactions safe.
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="faq7">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse7">
+            Who can use WPG Wallet and do you need a bank account?
+          </button>
+        </h2>
+        <div id="collapse7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+          <div class="accordion-body">
+            Anyone in Canada with valid ID and a linked bank account can use WPG Wallet. You'll need to connect at least one bank to load funds and make payments.
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- Footer -->
-<footer class="footer text-center">
-  <div class="container">
-    <p>&copy; 2025 WPG Wallet. All rights reserved.</p>
-  </div>
-</footer>
 
+  <!-- Footer -->
+  <footer class="text-center py-4 bg-light">
+    <p class="mb-0">&copy; <%= new Date().getFullYear() %> WPG Wallet. All rights reserved.</p>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
