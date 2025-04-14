@@ -18,7 +18,6 @@
 </head>
 
 <body class="d-flex flex-column" style="min-height: 100vh;">
-
     <!-- Header -->
     <%- include('partials/header', { user: user }) %>
 
@@ -31,43 +30,48 @@
 
                     <!-- Filters -->
                     <form class="filter-bar" method="GET" action="/transactions">
-                        <!-- Bank Dropdown -->
-                        <select name="accountId" class="form-select" onchange="this.form.submit()">
-                            <option value="">🔽 Select Bank</option>
-                            <% accounts.forEach(acc=> { %>
-                                <option value="<%= acc.id %>" <%=selectedAccount===acc.id ? "selected" : "" %>>
-                                    <%= acc.bankName %> -
-                                        <% if (acc.accountNumber && acc.accountNumber !=="Plaid Linked" ) { %>
-                                            ****<%= acc.accountNumber.slice(-4) %>
-                                                <% } else { %>
-                                                    <%= acc.accountNumber || "External" %>
-                                                        <% } %>
-                                </option>
-                                <% }) %>
-                        </select>
+                        <!-- CSRF token (not strictly required for GET but included in case of future POST conversion) -->
+                        <% if (csrfToken) { %>
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                            <% } %>
 
-                        <!-- Date Range -->
-                        <select name="range" class="form-select" onchange="this.form.submit()">
-                            <option value="7" <%=range==7 ? "selected" : "" %>>Last 7 days</option>
-                            <option value="30" <%=range==30 ? "selected" : "" %>>Last 30 days</option>
-                            <option value="90" <%=range==90 ? "selected" : "" %>>Last 90 days</option>
-                        </select>
+                                <!-- Bank Dropdown -->
+                                <select name="accountId" class="form-select" onchange="this.form.submit()">
+                                    <option value="">🔽 Select Bank</option>
+                                    <% accounts.forEach(acc=> { %>
+                                        <option value="<%= acc.id %>" <%=selectedAccount===acc.id ? "selected" : "" %>>
+                                            <%= acc.bankName %> -
+                                                <% if (acc.accountNumber && acc.accountNumber !=="Plaid Linked" ) { %>
+                                                    ****<%= acc.accountNumber.slice(-4) %>
+                                                        <% } else { %>
+                                                            <%= acc.accountNumber || "External" %>
+                                                                <% } %>
+                                        </option>
+                                        <% }) %>
+                                </select>
 
-                        <!-- Category Filter -->
-                        <select name="category" class="form-select" onchange="this.form.submit()">
-                            <option value="">All Categories</option>
-                            <% categories.forEach(cat=> { %>
-                                <option value="<%= cat %>" <%=category===cat ? "selected" : "" %>>
-                                    <%= cat %>
-                                </option>
-                                <% }) %>
-                        </select>
+                                <!-- Date Range -->
+                                <select name="range" class="form-select" onchange="this.form.submit()">
+                                    <option value="7" <%=range==7 ? "selected" : "" %>>Last 7 days</option>
+                                    <option value="30" <%=range==30 ? "selected" : "" %>>Last 30 days</option>
+                                    <option value="90" <%=range==90 ? "selected" : "" %>>Last 90 days</option>
+                                </select>
 
-                        <!-- CSV Export Button -->
-                        <a href="/transactions/export?accountId=<%= selectedAccount %>&range=<%= range %>&category=<%= category %>"
-                            class="btn btn-outline-secondary">
-                            Export CSV
-                        </a>
+                                <!-- Category Filter -->
+                                <select name="category" class="form-select" onchange="this.form.submit()">
+                                    <option value="">All Categories</option>
+                                    <% categories.forEach(cat=> { %>
+                                        <option value="<%= cat %>" <%=category===cat ? "selected" : "" %>>
+                                            <%= cat %>
+                                        </option>
+                                        <% }) %>
+                                </select>
+
+                                <!-- CSV Export Button -->
+                                <a href="/transactions/export?accountId=<%= selectedAccount %>&range=<%= range %>&category=<%= category %>"
+                                    class="btn btn-outline-secondary">
+                                    Export CSV
+                                </a>
                     </form>
 
                     <!-- Transactions Table -->
