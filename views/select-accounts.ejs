@@ -1,49 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Select Bank Accounts | WPG-Wallet</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 </head>
+
 <body class="d-flex flex-column min-vh-100">
 
   <!-- Header -->
   <%- include('partials/header', { user: user }) %>
 
-  <div class="d-flex flex-grow-1">
-    <%- include('partials/nav', { currentRoute: 'banks' }) %>
+    <div class="d-flex flex-grow-1">
+      <%- include('partials/nav', { currentRoute: 'banks' }) %>
 
-    <main class="flex-grow-1 p-4 bg-white">
-      <h3 class="mb-4">Select Accounts to Link</h3>
-      <p class="text-muted mb-4">These are the accounts found via Plaid. Choose which ones you want to link to your wallet.</p>
+        <main class="flex-grow-1 p-4 bg-white">
+          <h3 class="mb-4">Select Accounts to Link</h3>
+          <p class="text-muted mb-4">These are the accounts found via Plaid. Choose which ones you want to link to your
+            wallet.</p>
 
-      <form action="/plaid/select-accounts" method="POST">
-        <div class="row">
-          <% accounts.forEach((acct, index) => { %>
-            <div class="col-md-6 mb-4">
-              <div class="card p-3 shadow-sm border-0">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" name="selectedAccounts" value="<%= acct.accountId %>" id="acct<%= index %>">
-                  <label class="form-check-label" for="acct<%= index %>">
-                    <strong><%= acct.bankName %></strong><br/>
-                    <small>Type: <%= acct.accountType %> | Account #: ****<%= acct.accountNumber %></small><br/>
-                    <small>Balance: $<%= parseFloat(acct.balance).toFixed(2) %></small>
-                  </label>
+          <form action="/plaid/select-accounts" method="POST">
+            <!-- ✅ CSRF Token -->
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+            <div class="row">
+              <% accounts.forEach((acct, index)=> { %>
+                <div class="col-md-6 mb-4">
+                  <div class="card p-3 shadow-sm border-0">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="selectedAccounts"
+                        value="<%= acct.accountId %>" id="acct<%= index %>">
+                      <label class="form-check-label" for="acct<%= index %>">
+                        <strong>
+                          <%= acct.bankName %>
+                        </strong><br />
+                        <small>Type: <%= acct.accountType %> | Account #: ****<%= acct.accountNumber %></small><br />
+                        <small>Balance: $<%= parseFloat(acct.balance).toFixed(2) %></small>
+                      </label>
+                    </div>
+                  </div>
                 </div>
-              </div>
+                <% }) %>
             </div>
-          <% }) %>
-          
-        </div>
 
-        <button type="submit" class="btn btn-primary">Link Selected Accounts</button>
-      </form>
-    </main>
-  </div>
+            <button type="submit" class="btn btn-primary">Link Selected Accounts</button>
+          </form>
+        </main>
+    </div>
 
-  <%- include('partials/footer') %>
+    <%- include('partials/footer') %>
 
 </body>
+
 </html>

@@ -29,6 +29,7 @@
   "homepage": "https://github.com/ibinv31/wpg-wallet#readme",
   "dependencies": {
     "body-parser": "^1.20.3",
+    "csurf": "^1.10.0",
     "dotenv": "^16.4.7",
     "ejs": "^3.1.10",
     "express": "^4.21.2",

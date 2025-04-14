@@ -66,6 +66,9 @@
 
                         <h3 class="mb-4">Sign up</h3>
 
+                        <!-- 🔐 CSRF Token -->
+                        <input type="hidden" name="_csrf" id="csrfToken" value="<%= csrfToken %>">
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="firstName">First Name</label>
@@ -88,13 +91,11 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="state">State</label>
-                                <input type="text" id="state" name="state" class="form-control" placeholder="ex: MB"
-                                    required />
+                                <input type="text" id="state" name="state" class="form-control" required />
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="postalCode">Postal Code</label>
-                                <input type="text" id="postalCode" name="postalCode" class="form-control"
-                                    placeholder="ex: R3C 0A1" required />
+                                <input type="text" id="postalCode" name="postalCode" class="form-control" required />
                             </div>
                         </div>
 
@@ -105,21 +106,18 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="ssn">SSN</label>
-                                <input type="text" id="ssn" name="ssn" class="form-control" placeholder="ex: 1234"
-                                    required />
+                                <input type="text" id="ssn" name="ssn" class="form-control" required />
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label for="email">Email</label>
-                            <input type="email" id="email" name="email" class="form-control"
-                                placeholder="Enter your email" required />
+                            <input type="email" id="email" name="email" class="form-control" required />
                         </div>
 
                         <div class="mb-4 position-relative">
                             <label for="password">Password</label>
-                            <input type="password" id="password" name="password" class="form-control"
-                                placeholder="Enter your password" required />
+                            <input type="password" id="password" name="password" class="form-control" required />
                             <span class="password-toggle" onclick="togglePassword('password')">👁️</span>
                         </div>
 
@@ -170,7 +168,7 @@
                 });
             </script>
 
-            <!-- ✅ Firebase Google Signup with Toast -->
+            <!-- ✅ Google Signup + Toast + CSRF -->
             <script type="module">
                 import {
                   auth,
@@ -231,6 +229,7 @@
               
                 // Google Signup (already in your code, reused here)
                 const googleBtn = document.getElementById("googleSignup");
+                const csrfToken = document.getElementById("csrfToken").value;
                 if (googleBtn) {
                   googleBtn.addEventListener("click", async () => {
                     try {
@@ -241,7 +240,10 @@
               
                       const response = await fetch("/google-complete-profile", {
                         method: "POST",
-                        headers: { "Content-Type": "application/json" },
+                        headers: {
+                                    "Content-Type": "application/json",
+                                    "CSRF-Token": csrfToken
+                                },
                         body: JSON.stringify({ idToken, name, email })
                       });
               

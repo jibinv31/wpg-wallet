@@ -48,13 +48,16 @@
                                             <p class="mb-1"><strong>Balance:</strong> $<%=
                                                     parseFloat(account.balance).toFixed(2) %>
                                             </p>
-                                            <p class="mb-3 text-muted"><small>Linked on <%= new
-                                                        Date(account.createdAt).toLocaleDateString() %></small></p>
+                                            <p class="mb-3 text-muted">
+                                                <small>Linked on <%= new Date(account.createdAt).toLocaleDateString() %>
+                                                        </small>
+                                            </p>
 
-                                            <!-- ✅ Remove bank form -->
+                                            <!-- ✅ Remove bank form with CSRF -->
                                             <form method="POST" action="/banks/remove"
                                                 onsubmit="return confirm('Are you sure you want to remove this bank account?');">
                                                 <input type="hidden" name="docId" value="<%= account.id %>">
+                                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                                 <button type="submit"
                                                     class="btn btn-outline-danger btn-sm">Remove</button>
                                             </form>
@@ -73,6 +76,7 @@
 
         <!-- Footer -->
         <%- include('partials/footer') %>
+
 </body>
 
 </html>

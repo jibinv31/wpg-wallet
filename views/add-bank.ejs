@@ -13,65 +13,75 @@
   <!-- Header -->
   <%- include('partials/header', { user: user }) %>
 
-  <!-- Main layout -->
-  <div class="d-flex flex-grow-1">
-    <%- include('partials/nav', { currentRoute: 'banks' }) %>
+    <!-- Main layout -->
+    <div class="d-flex flex-grow-1">
+      <%- include('partials/nav', { currentRoute: 'banks' }) %>
 
-    <main class="flex-grow-1 p-4 bg-white">
-      <div class="container">
-        <h3 class="mb-4">🔗 Link a New Bank</h3>
+        <main class="flex-grow-1 p-4 bg-white">
+          <div class="container">
+            <h3 class="mb-4">🔗 Link a New Bank</h3>
 
-        <!-- ✅ Plaid Button -->
-        <div class="mb-4">
-          <button id="plaidLinkBtn" class="btn btn-primary">Link with Plaid</button>
-        </div>
+            <!-- ✅ Plaid Button -->
+            <div class="mb-4">
+              <input type="hidden" id="csrfToken" value="<%= csrfToken %>" />
+              <button id="plaidLinkBtn" class="btn btn-primary">Link with Plaid</button>
+            </div>
 
-        <p class="text-muted">We use Plaid to securely connect your bank accounts. You’ll be able to choose which accounts to link after authentication.</p>
-      </div>
-    </main>
-  </div>
+            <p class="text-muted">We use Plaid to securely connect your bank accounts. You’ll be able to choose which
+              accounts to link after authentication.</p>
+          </div>
+        </main>
+    </div>
 
-  <!-- Footer -->
-  <%- include('partials/footer') %>
+    <!-- Footer -->
+    <%- include('partials/footer') %>
 
-  <!-- ✅ Plaid Script -->
-  <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
-  <script type="module">
-    const linkBtn = document.getElementById("plaidLinkBtn");
+      <!-- ✅ Plaid Script -->
+      <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+      <script type="module">
+        const linkBtn = document.getElementById("plaidLinkBtn");
+        const csrfToken = document.getElementById("csrfToken").value;
 
-    linkBtn?.addEventListener("click", async () => {
-      try {
-        const res = await fetch("/plaid/create-link-token");
-        const { link_token } = await res.json();
+        linkBtn?.addEventListener("click", async () => {
+          try {
+            const res = await fetch("/plaid/create-link-token", {
+              headers: {
+                "CSRF-Token": csrfToken
+              }
+            });
+            const { link_token } = await res.json();
 
-        const handler = window.Plaid.create({
-          token: link_token,
-          onSuccess: async (public_token, metadata) => {
-            const res = await fetch("/plaid/exchange-token", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ public_token })
+            const handler = window.Plaid.create({
+              token: link_token,
+              onSuccess: async (public_token, metadata) => {
+                const res = await fetch("/plaid/exchange-token", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "CSRF-Token": csrfToken
+                  },
+                  body: JSON.stringify({ public_token })
+                });
+
+                if (res.redirected) {
+                  window.location.href = res.url;
+                } else {
+                  const { message } = await res.json();
+                  alert(message || "Something went wrong.");
+                }
+              },
+              onExit: (err, metadata) => {
+                console.warn("User exited Plaid", err);
+              }
             });
 
-            if (res.redirected) {
-              window.location.href = res.url;
-            } else {
-              const { message } = await res.json();
-              alert(message || "Something went wrong.");
-            }
-          },
-          onExit: (err, metadata) => {
-            console.warn("User exited Plaid", err);
+            handler.open();
+          } catch (err) {
+            console.error("Plaid error:", err);
+            alert("Failed to initialize Plaid.");
           }
         });
-
-        handler.open();
-      } catch (err) {
-        console.error("Plaid error:", err);
-        alert("Failed to initialize Plaid.");
-      }
-    });
-  </script>
+      </script>
 </body>
 
 </html>

@@ -88,15 +88,15 @@
                                                         <span class="text-muted">No document</span>
                                                         <% } %>
                                             </td>
-                                            <td>
-                                                <span class="badge badge-warning">Pending</span>
-                                            </td>
+                                            <td><span class="badge badge-warning">Pending</span></td>
                                             <td class="action-buttons">
                                                 <form method="POST" action="/admin/approve/<%= user.id %>">
+                                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                                     <button class="btn btn-success btn-sm" type="submit">✅
                                                         Approve</button>
                                                 </form>
                                                 <form method="POST" action="/admin/reject/<%= user.id %>">
+                                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                                     <button class="btn btn-danger btn-sm" type="submit">❌
                                                         Reject</button>
                                                 </form>
@@ -114,6 +114,7 @@
 
         <!-- Footer -->
         <%- include('partials/footer') %>
+
 </body>
 
 </html>

@@ -76,6 +76,8 @@
                                             <td>
                                                 <form method="POST"
                                                     action="/admin/block/<%= user.id %>?block=<%= !user.isBlocked %>">
+                                                    <!-- ✅ CSRF Token -->
+                                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
                                                     <button
                                                         class="btn btn-sm <%= user.isBlocked ? 'btn-success' : 'btn-danger' %>">
                                                         <%= user.isBlocked ? 'Unblock' : 'Block' %>
