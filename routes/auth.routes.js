@@ -84,6 +84,8 @@ router.post("/google-complete-profile", csrfProtection, async (req, res) => {
 // 🔐 Firebase login + session
 router.post("/sessionLogin", csrfProtection, sessionLogin);
 
+router.get("/logout", logout);
+
 // 🔐 OTP
 router.post("/send-otp", csrfProtection, async (req, res) => {
   const { email } = req.body;

@@ -28,7 +28,8 @@
                   <% savedBillers.forEach(biller=> { %>
                     <option data-type="<%= biller.billType %>" data-provider="<%= biller.provider %>"
                       data-consumer="<%= biller.consumerId %>">
-                      <%= biller.billType %> - <%= biller.provider %> (****<%= biller.consumerId.slice(-4) %>)
+                      <%= biller.billType %> - <%= biller.provider %> 
+                      <!-- (****<%= biller.consumerId.slice(-4) %>) -->
                     </option>
                     <% }) %>
                       <% } %>
