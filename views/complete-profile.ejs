@@ -20,8 +20,7 @@
         <div class="card shadow form-section p-4">
             <h3 class="mb-4 text-center">📝 Complete Your Profile</h3>
             <form action="/complete-profile" method="POST" enctype="multipart/form-data">
-                <!-- 🔐 CSRF Token -->
-                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <!-- 🔐 Removed CSRF Token -->
                 <input type="hidden" name="uid" value="<%= user.uid %>">
                 <input type="hidden" name="email" value="<%= user.email %>">
 

@@ -41,17 +41,19 @@ app.use(
 const csrfProtection = csrf({ cookie: false });
 
 // ✅ Apply CSRF selectively
+const csrfExemptRoutes = ["/signup", "/complete-profile", "/google-complete-profile"];
+
 app.use((req, res, next) => {
-    if (req.method === "POST" && req.originalUrl === "/signup") {
-        console.warn("⚠️ CSRF middleware skipped for /signup");
-        return next(); // Skip CSRF for /signup POST
+    if (req.method === "POST" && csrfExemptRoutes.includes(req.originalUrl)) {
+        console.warn(`⚠️ CSRF middleware skipped for ${req.originalUrl}`);
+        return next(); // Skip CSRF for exempt POST routes
     }
 
     if (["POST", "PUT", "DELETE"].includes(req.method)) {
         return csrfProtection(req, res, next);
     }
 
-    // Inject CSRF token for GET/HEAD
+    // Inject CSRF token for GET/HEAD requests
     if (["GET", "HEAD"].includes(req.method)) {
         return csrfProtection(req, res, () => {
             try {

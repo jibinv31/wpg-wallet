@@ -119,21 +119,30 @@
                             Already have an account? <a href="/login">Login</a>
                         </div>
 
-                        <!-- <div class="text-center mt-3">
+                        <div class="text-center mt-3">
                             <button type="button" class="btn btn-outline-danger w-100" id="googleSignup">
                                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20"
                                     class="me-2" />
                                 Sign up with Google
                             </button>
-                        </div> -->
+                        </div>
                     </form>
                 </div>
             </div>
 
+            <!-- 🔐 Toast Function -->
             <script>
                 function togglePassword(id) {
                     const input = document.getElementById(id);
                     input.type = input.type === "password" ? "text" : "password";
+                }
+
+                function showToast(message) {
+                    const toastEl = document.querySelector(".toast");
+                    const toastMsg = document.querySelector(".toast-body");
+                    toastMsg.textContent = message;
+                    const toast = new bootstrap.Toast(toastEl);
+                    toast.show();
                 }
 
                 window.addEventListener("DOMContentLoaded", () => {
@@ -145,6 +154,7 @@
                 });
             </script>
 
+            <!-- 🔐 Firebase Logic -->
             <script type="module">
                 import {
                     auth,
@@ -176,10 +186,10 @@
                             window.location.href = res.url;
                         } else {
                             const text = await res.text();
-                            alert("Signup failed: " + text);
+                            showToast("Signup failed: " + text);
                         }
                     } catch (err) {
-                        alert("❌ Firebase signup failed: " + err.message);
+                        showToast("❌ Firebase signup failed: " + err.message);
                     }
                 });
 
@@ -187,6 +197,10 @@
                 if (googleBtn) {
                     googleBtn.addEventListener("click", async () => {
                         try {
+                            provider.setCustomParameters({
+                                prompt: "select_account"
+                            });
+
                             const result = await signInWithPopup(auth, provider);
                             const idToken = await result.user.getIdToken();
                             const name = result.user.displayName || "Google User";
@@ -205,10 +219,10 @@
                             if (res.ok && data.redirect) {
                                 window.location.href = data.redirect;
                             } else {
-                                alert(data.error || "Google signup failed.");
+                                showToast(data.error || "Google signup failed.");
                             }
                         } catch (err) {
-                            alert("❌ Google signup failed: " + err.message);
+                            showToast("❌ Google signup failed: " + err.message);
                         }
                     });
                 }

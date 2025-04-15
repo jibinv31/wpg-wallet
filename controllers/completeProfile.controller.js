@@ -14,11 +14,11 @@ export const renderCompleteProfilePage = (req, res) => {
     res.render("complete-profile", {
         user: tempUser,
         errorMessage: null,
-        successMessage: null,
+        successMessage: null
     });
 };
 
-// ✅ Handle Submission of Complete Profile Form
+// ✅ Handle Submission of Complete Profile Form (CSRF Removed)
 export const handleCompleteProfile = async (req, res) => {
     const tempUser = req.session.tempGoogleUser;
 

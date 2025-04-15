@@ -58,10 +58,11 @@ router.get("/complete-profile", csrfProtection, (req, res) => {
   return renderCompleteProfilePage(req, res);
 });
 
-router.post("/complete-profile", upload.single("kycDocument"), csrfProtection, handleCompleteProfile);
+// ✅ Complete profile POST - CSRF removed
+router.post("/complete-profile", upload.single("kycDocument"), handleCompleteProfile);
 
-// 🔐 Google token verification (session setup)
-router.post("/google-complete-profile", csrfProtection, async (req, res) => {
+// ✅ Google token verification - CSRF removed
+router.post("/google-complete-profile", async (req, res) => {
   const { idToken, name } = req.body;
   try {
     const decodedToken = await admin.auth().verifyIdToken(idToken);
