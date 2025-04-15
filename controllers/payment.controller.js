@@ -132,6 +132,17 @@ export const processTransfer = async (req, res) => {
 
     const sourceData = sourceDoc.data();
 
+    // 🚫 Prevent transfer to your own account
+    if (
+      recipientEmail === req.session.user.email &&
+      recipientAccountNumber === sourceData.accountNumber
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "You cannot transfer to your own account."
+      });
+    }
+
     if (transferAmount > sourceData.balance) {
       return res.status(400).send("Insufficient balance.");
     }
