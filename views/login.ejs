@@ -23,7 +23,6 @@
       <div class="card p-4 shadow w-100" id="loginCard">
         <h3 class="mb-4 text-center">Login to WPG Wallet</h3>
 
-        <!-- 🔐 Login Form -->
         <form id="loginForm">
           <input type="hidden" name="_csrf" id="csrfToken" value="<%= csrfToken %>">
 
@@ -54,7 +53,6 @@
         </div>
       </div>
 
-      <!-- 🔄 Spinner -->
       <div id="loginSpinner" class="card p-4 shadow text-center d-none">
         <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Logging in...</span>
@@ -64,7 +62,6 @@
     </div>
   </div>
 
-  <!-- ✅ OTP Modal -->
   <div class="modal fade" id="otpModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content p-4">
@@ -76,7 +73,6 @@
     </div>
   </div>
 
-  <!-- 🔔 Toast for Errors -->
   <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
     <div id="loginToast" class="toast align-items-center text-white bg-danger" role="alert" data-bs-delay="4000">
       <div class="d-flex">
@@ -86,7 +82,6 @@
     </div>
   </div>
 
-  <!-- 🔐 Scripts -->
   <script>
     function togglePassword(id) {
       const input = document.getElementById(id);
@@ -130,6 +125,7 @@
             "Content-Type": "application/json",
             "CSRF-Token": csrfToken
           },
+          credentials: "include", // ✅ critical for session to validate CSRF
           body: JSON.stringify({ email }),
         });
 
@@ -152,6 +148,7 @@
           "Content-Type": "application/json",
           "CSRF-Token": csrfToken
         },
+        credentials: "include", // ✅ ensure session cookie is sent
         body: JSON.stringify({ idToken: tempIdToken, name: tempName, otp }),
       });
 
@@ -177,6 +174,7 @@
               "Content-Type": "application/json",
               "CSRF-Token": csrfToken
             },
+            credentials: "include",
             body: JSON.stringify({ idToken, name })
           });
 

@@ -8,104 +8,8 @@ import { sendOTPEmail } from "../utils/email.js";
 import { verifyOTPCode } from "../utils/otp.js";
 import { getAuth } from "firebase-admin/auth";
 
-// ✅ Session Login (handles both normal users and super admins)
-export const sessionLogin = async (req, res) => {
-  const { idToken, name, otp } = req.body;
-  console.log("📥 Received session login request...");
-
-  try {
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    const uid = decodedToken.uid;
-    const email = decodedToken.email;
-    const signInProvider = decodedToken.firebase?.sign_in_provider;
-
-    console.log(`✅ Verified token for user: ${email} (UID: ${uid})`);
-
-    if (signInProvider !== "google.com") {
-      const isValid = await verifyOTPCode(email, otp);
-      if (!isValid) {
-        return res.status(403).json({ error: "Invalid or expired OTP" });
-      }
-    }    
-
-    if (!otp && signInProvider !== "google.com") {
-      return res.status(400).json({ error: "OTP is required" });
-    }
-
-    // 🔍 Check if super admin
-    const superAdminSnap = await db.collection("super_admins").doc(uid).get();
-    const isSuperAdmin = superAdminSnap.exists;
-
-    if (isSuperAdmin) {
-      req.session.user = {
-        uid,
-        email,
-        name: name || "Super Admin",
-        isSuperAdmin: true
-      };
-
-      console.log("🔐 Super admin logged in.");
-      return res.status(200).json({
-        message: "Super admin session created",
-        redirect: "/admin-dashboard"
-      });
-    }
-
-    // 🔍 Check if regular user exists
-    const user = await getUserById(uid);
-    if (!user) {
-      await admin.auth().deleteUser(uid);
-      console.log(`🗑️ Deleted incomplete user ${email} from Firebase Auth`);
-      return res.status(403).json({
-        error: "You are not registered with WPG Wallet. Please complete your KYC to continue."
-      });
-    }
-
-    if (user.isValidated === false) {
-      return res.status(403).json({ error: "User not yet validated by admin." });
-    }
-
-    if (user.isBlocked === true) {
-      return res.status(403).json({ error: "Your account has been blocked by the admin." });
-    }
-
-    // ✅ Decrypt sensitive data
-    const decryptedSSN = user.ssn ? decrypt(user.ssn) : null;
-    const decryptedAddress = user.address ? decrypt(user.address) : null;
-    const decryptedPostalCode = user.postalCode ? decrypt(user.postalCode) : null;
-    const decryptedState = user.state ? decrypt(user.state) : null;
-
-    console.log("🔓 Decrypted values for session:", {
-      decryptedSSN,
-      decryptedAddress,
-      decryptedPostalCode,
-      decryptedState
-    });
-
-    req.session.user = {
-      uid,
-      email,
-      name: user.name || name || "User",
-      dob: user.dob || "N/A",
-      ssn: decryptedSSN ? "****" + decryptedSSN.slice(-2) : "N/A",
-      decryptedSSN: decryptedSSN || "N/A",
-      address: decryptedAddress || "N/A",
-      postalCode: decryptedPostalCode || "N/A",
-      state: decryptedState || "N/A",
-      isSuperAdmin: false
-    };
-
-    console.log("✅ User session created.");
-    return res.status(200).json({ message: "Session created", redirect: "/dashboard" });
-
-  } catch (error) {
-    console.error("❌ Session login error:", error.message);
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-};
-
-// ✅ Signup + KYC Document Upload (pure logic – toast handled in route)
-export const handleSignup = async (req) => {
+// ✅ Manual Signup (with CSRF + KYC Upload)
+export const handleSignup = async (req, res) => {
   try {
     const {
       idToken,
@@ -122,16 +26,22 @@ export const handleSignup = async (req) => {
     const name = `${firstName} ${lastName}`;
     const file = req.file;
 
-    if (!file) throw new Error("KYC document is required.");
+    if (!file) {
+      req.session.errorMessage = "KYC document is required.";
+      return res.redirect("/signup");
+    }
 
+    // ✅ Firebase Token Verification
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     const uid = decodedToken.uid;
 
     const existing = await getUserById(uid);
     if (existing) {
-      throw new Error("Email already exists.");
+      req.session.errorMessage = "Email already exists.";
+      return res.redirect("/signup");
     }
 
+    // ✅ Upload file to Firebase Storage
     const ext = path.extname(file.originalname);
     const uniqueName = `kyc_docs/${uid}_${uuidv4()}${ext}`;
     const firebaseFile = storage.file(uniqueName);
@@ -150,24 +60,19 @@ export const handleSignup = async (req) => {
       expires: "03-01-2030"
     });
 
-    fs.unlink(file.path, (err) => {
+    fs.unlink(file.path, err => {
       if (err) console.warn("⚠️ Could not delete temp file:", file.path);
     });
 
-    console.log("🔐 Raw values before encryption:", {
-      name,
-      dob,
-      ssn,
-      address,
-      postalCode,
-      state
-    });
+    console.log("🔐 Raw values before encryption:", { name, dob, ssn, address, postalCode, state });
 
+    // ✅ Encrypt sensitive fields
+    const encryptedSSN = encrypt(ssn);
     const encryptedAddress = encrypt(address);
     const encryptedPostalCode = encrypt(postalCode);
-    const encryptedSSN = encrypt(ssn);
     const encryptedState = encrypt(state);
 
+    // ✅ Save user data in Firestore
     await createUser(uid, {
       name,
       email,
@@ -182,51 +87,101 @@ export const handleSignup = async (req) => {
       createdAt: new Date().toISOString()
     });
 
-    console.log("✅ User and document stored. Awaiting admin validation.");
-    return { success: true };
+    console.log("✅ User and document stored.");
+    req.session.successMessage = "Signup successful! Awaiting admin validation.";
+    return res.redirect("/login");
 
   } catch (err) {
     console.error("❌ Signup error:", err.message);
-    throw new Error(err.message || "Signup failed.");
+    req.session.errorMessage = err.message || "Signup failed.";
+    return res.redirect("/signup");
   }
 };
 
-// 🔴 Logout
-export const logout = (req, res) => {
-  console.log("👋 Logging out...");
-  req.session.destroy((err) => {
-    if (err) {
-      console.error("❌ Logout error:", err.message);
-      return res.status(500).send("Logout error");
+// 🔐 Login session for Firebase + OTP
+export const sessionLogin = async (req, res) => {
+  const { idToken, name, otp } = req.body;
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const uid = decodedToken.uid;
+    const email = decodedToken.email;
+    const signInProvider = decodedToken.firebase?.sign_in_provider;
+
+    if (signInProvider !== "google.com") {
+      if (!otp) return res.status(400).json({ error: "OTP is required" });
+
+      const isValid = await verifyOTPCode(email, otp);
+      if (!isValid) return res.status(403).json({ error: "Invalid or expired OTP" });
     }
-    console.log("✅ Session destroyed.");
+
+    // ✅ Check for Super Admin
+    const superAdminSnap = await db.collection("super_admins").doc(uid).get();
+    if (superAdminSnap.exists) {
+      req.session.user = { uid, email, name, isSuperAdmin: true };
+      return res.status(200).json({ message: "Super admin login", redirect: "/admin-dashboard" });
+    }
+
+    // ✅ Check Regular User
+    const user = await getUserById(uid);
+    if (!user) {
+      await admin.auth().deleteUser(uid);
+      return res.status(403).json({ error: "You are not registered with WPG Wallet." });
+    }
+
+    if (!user.isValidated) return res.status(403).json({ error: "User not validated by admin." });
+    if (user.isBlocked) return res.status(403).json({ error: "User has been blocked." });
+
+    const decryptedSSN = user.ssn ? decrypt(user.ssn) : null;
+    const decryptedAddress = user.address ? decrypt(user.address) : null;
+    const decryptedPostalCode = user.postalCode ? decrypt(user.postalCode) : null;
+    const decryptedState = user.state ? decrypt(user.state) : null;
+
+    req.session.user = {
+      uid,
+      email,
+      name: user.name || name || "User",
+      dob: user.dob || "N/A",
+      ssn: decryptedSSN ? "****" + decryptedSSN.slice(-2) : "N/A",
+      decryptedSSN,
+      address: decryptedAddress,
+      postalCode: decryptedPostalCode,
+      state: decryptedState,
+      isSuperAdmin: false
+    };
+
+    return res.status(200).json({ message: "Session created", redirect: "/dashboard" });
+
+  } catch (error) {
+    console.error("❌ Session login error:", error.message);
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+};
+
+// 🔁 Logout
+export const logout = (req, res) => {
+  req.session.destroy(err => {
+    if (err) return res.status(500).send("Logout error");
     res.render("landing");
   });
 };
 
-// 🔁 Forgot Password: Render Form
+// 🔁 Forgot Password
 export const renderForgotPasswordPage = (req, res) => {
   res.render("forgot-password", { message: null });
 };
 
-// 🔁 Forgot Password: Handle Submission
 export const handleForgotPassword = async (req, res) => {
   const { email } = req.body;
-
   try {
     const link = await getAuth().generatePasswordResetLink(email);
-
-    console.log("📩 Password reset link:", link);
-
     res.render("forgot-password", {
-      message: `✅ A password reset link has been sent to ${email}.`,
+      message: `✅ A password reset link has been sent to ${email}.`
     });
-
-    // Optional: You can email this link to the user via nodemailer
   } catch (error) {
-    console.error("❌ Error generating password reset link:", error.message);
+    console.error("❌ Error generating reset link:", error.message);
     res.render("forgot-password", {
-      message: "❌ Failed to send password reset link. Please try again.",
+      message: "❌ Failed to send reset link. Try again."
     });
   }
 };

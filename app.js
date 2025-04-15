@@ -4,29 +4,27 @@ import session from "express-session";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import path from "path";
-import csrf from "csurf"; // ✅ CSRF middleware
+import csrf from "csurf";
 import { fileURLToPath } from "url";
 
-// 🔁 Setup directory reference for ESM
+// Setup directory reference for ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 📦 Load environment variables
+// Load environment variables
 dotenv.config();
 
-// ⚙️ Create Express app
 const app = express();
 
-// ✅ Create CSRF protection instance (no cookie mode)
-const csrfProtection = csrf({ cookie: false });
-
-// 📄 Middleware
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, "public")));
+// View engine and static files
 app.set("view engine", "ejs");
+app.use(express.static(path.join(__dirname, "public")));
 
-// 🔐 Session Setup
+// Body parsers
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+// Session setup (MUST come before CSRF)
 app.use(
     session({
         secret: process.env.SESSION_SECRET || "wpgwallet-secret",
@@ -39,32 +37,64 @@ app.use(
     })
 );
 
-// ✅ Set CSRF token only for GET requests (safe forms)
-app.use((req, res, next) => {
-    if (req.method === "GET" || req.method === "HEAD") {
-        csrfProtection(req, res, () => {
-            res.locals.csrfToken = req.csrfToken();
-            next();
-        });
-    } else {
-        next();
-    }
-});
+// CSRF middleware
+const csrfProtection = csrf({ cookie: false });
 
-// ✅ Middleware to validate CSRF for fetch requests (manually attach)
+// ✅ Apply CSRF selectively
 app.use((req, res, next) => {
+    if (req.method === "POST" && req.originalUrl === "/signup") {
+        console.warn("⚠️ CSRF middleware skipped for /signup");
+        return next(); // Skip CSRF for /signup POST
+    }
+
     if (["POST", "PUT", "DELETE"].includes(req.method)) {
         return csrfProtection(req, res, next);
     }
+
+    // Inject CSRF token for GET/HEAD
+    if (["GET", "HEAD"].includes(req.method)) {
+        return csrfProtection(req, res, () => {
+            try {
+                const token = req.csrfToken();
+                res.locals.csrfToken = token;
+                console.log("✅ CSRF token injected into res.locals.csrfToken:", token);
+            } catch (err) {
+                console.error("❌ Failed to generate CSRF token:", err.message);
+            }
+            next();
+        });
+    }
+
     next();
 });
 
-// ✅ Route to send CSRF token to frontend
+// ✅ Expose CSRF token via API
 app.get("/csrf-token", (req, res) => {
-    res.json({ csrfToken: req.csrfToken() });
+    try {
+        const token = req.csrfToken();
+        console.log("📤 /csrf-token generated:", token);
+        res.json({ csrfToken: token });
+    } catch (e) {
+        console.error("❌ Could not generate CSRF token:", e.message);
+        res.status(500).json({ error: "CSRF token generation failed." });
+    }
 });
 
-// 📦 Import Routes
+// 🔥 Global CSRF error logger
+app.use((err, req, res, next) => {
+    if (err.code === "EBADCSRFTOKEN") {
+        console.error("❌ CSRF validation failed!");
+        console.log("➡️ Method:", req.method);
+        console.log("➡️ URL:", req.originalUrl);
+        console.log("➡️ Token from body:", req.body?._csrf);
+        console.log("➡️ Token from headers:", req.headers["csrf-token"]);
+        console.log("➡️ Session ID:", req.sessionID);
+        return res.status(403).send("Invalid CSRF token. Please refresh the page.");
+    }
+    next(err);
+});
+
+// Import Routes
 import authRoutes from "./routes/auth.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import bankRoutes from "./routes/bank.routes.js";
@@ -78,9 +108,10 @@ import billRoutes from "./routes/bills.routes.js";
 import analyticsRoutes from "./routes/analytics.routes.js";
 import { setNotificationCount } from "./middleware/notificationCount.js";
 
+// 🔔 Middleware
 app.use(setNotificationCount);
 
-// 🌐 Routes
+// Register Routes
 app.use("/", authRoutes);
 app.use("/", dashboardRoutes);
 app.use("/", bankRoutes);
@@ -93,12 +124,12 @@ app.use(adminRoutes);
 app.use("/", billRoutes);
 app.use("/", analyticsRoutes);
 
-// 🔁 Default route
+// Default route
 app.get("/", (req, res) => {
     res.redirect("/landing");
 });
 
-// 🚀 Start Server
+// Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 WPG Wallet server running at http://localhost:${PORT}`);
