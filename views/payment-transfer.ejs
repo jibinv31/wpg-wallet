@@ -10,230 +10,237 @@
 </head>
 
 <body class="d-flex flex-column" style="min-height: 100vh;">
-
   <!-- Header -->
   <%- include('partials/header', { user: user }) %>
 
-    <!-- Main layout -->
-    <div class="d-flex flex-grow-1">
-      <%- include('partials/nav') %>
+  <!-- Main layout -->
+  <div class="d-flex flex-grow-1">
+    <%- include('partials/nav') %>
 
-        <main class="flex-grow-1 p-4">
-          <h3 class="mb-4">Payment Transfer</h3>
+    <main class="flex-grow-1 p-4">
+      <h3 class="mb-4">Payment Transfer</h3>
 
-          <form id="transferForm" action="/payment-transfer" method="POST">
-            <input type="hidden" name="_csrf" id="csrfToken" value="<%= csrfToken %>">
+      <form id="transferForm" action="/payment-transfer" method="POST">
+        <input type="hidden" name="_csrf" id="csrfToken" value="<%= csrfToken %>">
 
-            <!-- Source Bank -->
-            <div class="mb-3">
-              <label for="sourceAccount" class="form-label">Select Source Bank</label>
-              <select class="form-select" name="sourceAccount" id="sourceAccount" required>
-                <option value="" selected disabled>Select Account</option>
-                <% accounts.forEach(account=> { %>
-                  <option value="<%= account.id %>">
-                    <%= account.bankName %> - ****<%= account.accountNumber %> ($<%= account.balance %>)
-                  </option>
-                  <% }) %>
-              </select>
-            </div>
+        <!-- Source Bank -->
+        <div class="mb-3">
+          <label for="sourceAccount" class="form-label">Select Source Bank</label>
+          <select class="form-select" name="sourceAccount" id="sourceAccount" required>
+            <option value="" selected disabled>Select Account</option>
+            <% accounts.forEach(account=> { %>
+              <option value="<%= account.id %>">
+                <%= account.bankName %> - ****<%= account.accountNumber %> ($<%= account.balance %>)
+              </option>
+            <% }) %>
+          </select>
+        </div>
 
-            <!-- Transfer Purpose -->
-            <div class="mb-3">
-              <label for="purpose" class="form-label">Purpose of Transfer</label>
-              <select class="form-select" name="note" id="purpose" required>
-                <option value="" disabled selected>Select Purpose</option>
-                <option>Rent Payment</option>
-                <option>Salary/Income</option>
-                <option>Education Fees</option>
-                <option>Utility Bill Payment</option>
-                <option>Loan Repayment</option>
-                <option>Groceries/Shopping</option>
-                <option>Medical Expenses</option>
-                <option>Gift/Donation</option>
-                <option>EMI Payment</option>
-                <option>Travel Expenses</option>
-                <option>Family Support</option>
-                <option>Investment</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
+        <!-- Purpose -->
+        <div class="mb-3">
+          <label for="purpose" class="form-label">Purpose of Transfer</label>
+          <select class="form-select" name="note" id="purpose" required>
+            <option value="" disabled selected>Select Purpose</option>
+            <option>Rent Payment</option>
+            <option>Salary/Income</option>
+            <option>Education Fees</option>
+            <option>Utility Bill Payment</option>
+            <option>Loan Repayment</option>
+            <option>Groceries/Shopping</option>
+            <option>Medical Expenses</option>
+            <option>Gift/Donation</option>
+            <option>EMI Payment</option>
+            <option>Travel Expenses</option>
+            <option>Family Support</option>
+            <option>Investment</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
 
-            <!-- Custom Note -->
-            <div class="mb-3 d-none" id="customNoteWrapper">
-              <label for="customNote" class="form-label">Specify your own note</label>
-              <input type="text" class="form-control" name="customNote" id="customNote"
-                placeholder="Enter your custom note here">
-            </div>
+        <!-- Custom Note -->
+        <div class="mb-3 d-none" id="customNoteWrapper">
+          <label for="customNote" class="form-label">Specify your own note</label>
+          <input type="text" class="form-control" name="customNote" id="customNote"
+            placeholder="Enter your custom note here">
+        </div>
 
-            <!-- Recipient Email -->
-            <div class="mb-3">
-              <label for="recipientEmail" class="form-label">Recipient's Email Address</label>
-              <div class="input-group">
-                <input type="email" class="form-control" name="recipientEmail" id="recipientEmail" required>
-                <span class="input-group-text" id="emailStatus"><i class=""></i></span>
-              </div>
-            </div>
-
-            <!-- Recipient Account Number -->
-            <div class="mb-3">
-              <label for="recipientAccountNumber" class="form-label">Recipient's Bank Account Number</label>
-              <div class="input-group">
-                <input type="text" class="form-control" name="recipientAccountNumber" id="recipientAccountNumber"
-                  required>
-                <span class="input-group-text" id="accountStatus"><i class=""></i></span>
-              </div>
-            </div>
-
-            <!-- Amount -->
-            <div class="mb-3">
-              <label for="amount" class="form-label">Amount</label>
-              <input type="number" step="0.01" min="0" class="form-control" name="amount" id="amount" required>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100" id="submitBtn" disabled>Transfer Funds</button>
-          </form>
-        </main>
-    </div>
-
-    <!-- Footer -->
-    <%- include('partials/footer') %>
-
-      <!-- ✅ Modal -->
-      <div class="modal fade" id="transferModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content text-center">
-            <div class="modal-body p-4">
-              <h5 class="mb-3">✅ Transfer Successful!</h5>
-              <p>Redirecting to transaction history...</p>
-            </div>
+        <!-- Recipient -->
+        <div class="mb-3">
+          <label for="recipientEmail" class="form-label">Recipient's Email Address</label>
+          <div class="input-group">
+            <input type="email" class="form-control" name="recipientEmail" id="recipientEmail" required>
+            <span class="input-group-text" id="emailStatus"><i class=""></i></span>
           </div>
         </div>
-      </div>
 
-      <!-- 🚫 Self-transfer Toast -->
-<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
-  <div id="selfTransferToast" class="toast align-items-center text-bg-danger border-0" role="alert">
-    <div class="d-flex">
-      <div class="toast-body">
-        🚫 You cannot transfer to your own account.
+        <div class="mb-3">
+          <label for="recipientAccountNumber" class="form-label">Recipient's Bank Account Number</label>
+          <div class="input-group">
+            <input type="text" class="form-control" name="recipientAccountNumber" id="recipientAccountNumber" required>
+            <span class="input-group-text" id="accountStatus"><i class=""></i></span>
+          </div>
+        </div>
+
+        <!-- Amount -->
+        <div class="mb-3">
+          <label for="amount" class="form-label">Amount</label>
+          <input type="number" step="0.01" min="0" class="form-control" name="amount" id="amount" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100" id="submitBtn" disabled>Transfer Funds</button>
+      </form>
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <%- include('partials/footer') %>
+
+  <!-- ✅ Modal -->
+  <div class="modal fade" id="transferModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content text-center">
+        <div class="modal-body p-4">
+          <h5 class="mb-3">✅ Transfer Successful!</h5>
+          <p>Redirecting to transaction history...</p>
+        </div>
       </div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
     </div>
   </div>
-</div>
 
+  <!-- 🚫 Toasts -->
+  <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+    <!-- Self-transfer toast -->
+    <div id="selfTransferToast" class="toast align-items-center text-bg-danger border-0" role="alert">
+      <div class="d-flex">
+        <div class="toast-body">
+          🚫 You cannot transfer to your own account.
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
 
-      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- General failure toast -->
+    <div id="failTransferToast" class="toast align-items-center text-bg-danger border-0" role="alert">
+      <div class="d-flex">
+        <div class="toast-body">
+          ❌ Transfer failed. Please check the details and try again.
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
 
-      <script>
-        const emailInput = document.getElementById("recipientEmail");
-        const accInput = document.getElementById("recipientAccountNumber");
-        const emailStatus = document.getElementById("emailStatus");
-        const accountStatus = document.getElementById("accountStatus");
-        const purposeSelect = document.getElementById("purpose");
-        const customNoteWrapper = document.getElementById("customNoteWrapper");
-        const submitBtn = document.getElementById("submitBtn");
-        const csrfToken = document.getElementById("csrfToken").value;
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const emailInput = document.getElementById("recipientEmail");
+    const accInput = document.getElementById("recipientAccountNumber");
+    const emailStatus = document.getElementById("emailStatus");
+    const accountStatus = document.getElementById("accountStatus");
+    const purposeSelect = document.getElementById("purpose");
+    const customNoteWrapper = document.getElementById("customNoteWrapper");
+    const submitBtn = document.getElementById("submitBtn");
+    const csrfToken = document.getElementById("csrfToken").value;
 
-        let isVerified = false;
+    let isVerified = false;
 
-        const verifyRecipient = async () => {
-          const email = emailInput.value.trim();
-          const accountNumber = accInput.value.trim();
+    const verifyRecipient = async () => {
+      const email = emailInput.value.trim();
+      const accountNumber = accInput.value.trim();
 
-          if (!email || !accountNumber) {
-            submitBtn.disabled = true;
-            return;
-          }
+      if (!email || !accountNumber) {
+        submitBtn.disabled = true;
+        return;
+      }
 
-          const res = await fetch("/verify-recipient", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "CSRF-Token": csrfToken
-            },
-            body: JSON.stringify({ email, accountNumber }),
-          });
+      const res = await fetch("/verify-recipient", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "CSRF-Token": csrfToken
+        },
+        body: JSON.stringify({ email, accountNumber }),
+      });
 
-          const { success } = await res.json();
+      const { success } = await res.json();
 
-          if (success) {
-            emailStatus.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
-            accountStatus.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
-            isVerified = true;
-          } else {
-            emailStatus.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i>';
-            accountStatus.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i>';
-            isVerified = false;
-          }
-          submitBtn.disabled = !isVerified;
-        };
+      if (success) {
+        emailStatus.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
+        accountStatus.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
+        isVerified = true;
+      } else {
+        emailStatus.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i>';
+        accountStatus.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i>';
+        isVerified = false;
+      }
+      submitBtn.disabled = !isVerified;
+    };
 
-        emailInput.addEventListener("blur", verifyRecipient);
-        accInput.addEventListener("blur", verifyRecipient);
+    emailInput.addEventListener("blur", verifyRecipient);
+    accInput.addEventListener("blur", verifyRecipient);
 
-        emailInput.addEventListener("input", () => {
-          isVerified = false;
-          submitBtn.disabled = true;
-        });
-        accInput.addEventListener("input", () => {
-          isVerified = false;
-          submitBtn.disabled = true;
-        });
+    emailInput.addEventListener("input", () => {
+      isVerified = false;
+      submitBtn.disabled = true;
+    });
+    accInput.addEventListener("input", () => {
+      isVerified = false;
+      submitBtn.disabled = true;
+    });
 
-        // Show/hide custom note
-        purposeSelect.addEventListener("change", () => {
-          if (purposeSelect.value === "other") {
-            customNoteWrapper.classList.remove("d-none");
-            document.getElementById("customNote").setAttribute("name", "note");
-          } else {
-            customNoteWrapper.classList.add("d-none");
-            document.getElementById("customNote").removeAttribute("name");
-          }
-        });
+    // Show/hide custom note
+    purposeSelect.addEventListener("change", () => {
+      if (purposeSelect.value === "other") {
+        customNoteWrapper.classList.remove("d-none");
+        document.getElementById("customNote").setAttribute("name", "note");
+      } else {
+        customNoteWrapper.classList.add("d-none");
+        document.getElementById("customNote").removeAttribute("name");
+      }
+    });
 
-        // Handle form submit with fetch
-        document.getElementById("transferForm").addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const sourceSelect = document.getElementById("sourceAccount");
-  const selectedSource = sourceSelect.options[sourceSelect.selectedIndex].textContent;
-  const sourceAccountNumberMatch = selectedSource.match(/\*{4}(\d+)/);
-  const sourceAccountNumber = sourceAccountNumberMatch ? sourceAccountNumberMatch[1] : null;
+    // Submit form
+    document.getElementById("transferForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-  const recipientEmail = document.getElementById("recipientEmail").value.trim();
-  const recipientAccNum = document.getElementById("recipientAccountNumber").value.trim();
-  const userEmail = "<%= user.email %>"; // server-injected
+      const sourceSelect = document.getElementById("sourceAccount");
+      const selectedSource = sourceSelect.options[sourceSelect.selectedIndex].textContent;
+      const sourceAccountNumberMatch = selectedSource.match(/\*{4}(\d+)/);
+      const sourceAccountNumber = sourceAccountNumberMatch ? sourceAccountNumberMatch[1] : null;
 
-  if (recipientEmail === userEmail && selectedSource.includes(recipientAccNum)) {
-    const toast = new bootstrap.Toast(document.getElementById("selfTransferToast"));
-    toast.show();
-    return; // don't continue with fetch
-  }
+      const recipientEmail = document.getElementById("recipientEmail").value.trim();
+      const recipientAccNum = document.getElementById("recipientAccountNumber").value.trim();
+      const userEmail = "<%= user.email %>";
 
-          const formData = new FormData(e.target);
-          const payload = Object.fromEntries(formData.entries());
+      if (recipientEmail === userEmail && selectedSource.includes(recipientAccNum)) {
+        const toast = new bootstrap.Toast(document.getElementById("selfTransferToast"));
+        toast.show();
+        return;
+      }
 
-        
-          const res = await fetch("/payment-transfer", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "CSRF-Token": csrfToken
-            },
-            body: JSON.stringify(payload),
-          });
+      const formData = new FormData(e.target);
+      const payload = Object.fromEntries(formData.entries());
 
-          if (res.ok) {
-            const modal = new bootstrap.Modal(document.getElementById("transferModal"));
-            modal.show();
-            setTimeout(() => {
-              window.location.href = "/transactions";
-            }, 3000);
-          } else {
-            alert("Transfer failed. Please check the details and try again.");
-          }
-        });
-      </script>
+      const res = await fetch("/payment-transfer", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "CSRF-Token": csrfToken
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        const modal = new bootstrap.Modal(document.getElementById("transferModal"));
+        modal.show();
+        setTimeout(() => {
+          window.location.href = "/transactions";
+        }, 3000);
+      } else {
+        const failToast = new bootstrap.Toast(document.getElementById("failTransferToast"));
+        failToast.show();
+      }
+    });
+  </script>
 </body>
-
 </html>
