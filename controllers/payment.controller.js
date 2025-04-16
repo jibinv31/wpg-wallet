@@ -1,4 +1,5 @@
 import { db } from "../services/firebase.js";
+import { sendTransferConfirmationToSender, sendTransferNotificationToRecipient } from "../utils/email.js";
 
 // Helper: Get user's linked bank by ID
 const getLinkedBankById = async (uid, docId) => {
@@ -45,6 +46,20 @@ const simulateTransferSuccess = async (
         completedAt: new Date().toISOString(),
       });
 
+            // ✅ Email sender
+            try {
+              await sendTransferConfirmationToSender(
+                senderEmail,
+                amount,
+                recipientEmail,
+                transfer.to.slice(-4) // last 4 digits of recipient account
+              );
+              console.log(`✅ Email sent to ${senderEmail}`);
+              
+            } catch (err) {
+              console.error("❌ Failed to send sender email:", err.message);
+            }
+
       // ✅ Create success notification
       await db.collection("notifications").add({
         userId: uid,
@@ -77,6 +92,20 @@ const simulateTransferSuccess = async (
         });
 
         console.log(`✅ Credited $${amount} to ${transfer.recipientEmail}`);
+
+
+        // ✅ Email recipient
+        try {
+          await sendTransferNotificationToRecipient(
+            recipientEmail,
+            amount,
+            senderEmail,
+            transfer.to.slice(-4)
+          );
+          console.log(`✅ Email sent to ${recipientEmail}`);          
+        } catch (err) {
+          console.error("❌ Failed to send recipient email:", err.message);
+        }
 
         // ✅ 4. Create recipient notification
         await db.collection("notifications").add({
