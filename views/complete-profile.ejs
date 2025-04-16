@@ -2,69 +2,119 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <title>Complete Your Profile – WPG Wallet</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <style>
-        .form-section {
-            max-width: 600px;
-            margin: auto;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Complete Your Profile – WPG Wallet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    .form-section {
+      max-width: 600px;
+      margin: auto;
+    }
+  </style>
 </head>
 
 <body class="bg-light">
 
-    <div class="container py-5">
-        <div class="card shadow form-section p-4">
-            <h3 class="mb-4 text-center">📝 Complete Your Profile</h3>
-            <form action="/complete-profile" method="POST" enctype="multipart/form-data">
-                <!-- 🔐 Removed CSRF Token -->
-                <input type="hidden" name="uid" value="<%= user.uid %>">
-                <input type="hidden" name="email" value="<%= user.email %>">
+  <div class="container py-5">
+    <div class="card shadow form-section p-4">
+      <h3 class="mb-4 text-center">📝 Complete Your Profile</h3>
+      <form id="completeProfileForm" action="/complete-profile" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="uid" value="<%= user.uid %>">
+        <input type="hidden" name="email" value="<%= user.email %>">
 
-                <div class="mb-3">
-                    <label class="form-label">Full Name</label>
-                    <input type="text" name="name" class="form-control" value="<%= user.name %>" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Date of Birth</label>
-                    <input type="date" name="dob" class="form-control" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">SIN</label>
-                    <input type="text" name="ssn" class="form-control" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Address</label>
-                    <input type="text" name="address" class="form-control" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Postal Code</label>
-                    <input type="text" name="postalCode" class="form-control" required>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Province</label>
-                    <input type="text" name="state" class="form-control" required>
-                </div>
-
-                <div class="mb-4">
-                    <label class="form-label">Upload Photo ID / KYC Document (PDF, PNG, JPG)</label>
-                    <input type="file" name="kycDocument" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required />
-                </div>
-
-                <button type="submit" class="btn btn-primary w-100">Submit for Verification</button>
-            </form>
+        <div class="mb-3">
+          <label class="form-label">Full Name</label>
+          <input type="text" name="name" class="form-control" value="<%= user.name %>" required>
         </div>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <div class="mb-3">
+          <label class="form-label">Date of Birth</label>
+          <input type="date" name="dob" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">SIN</label>
+          <input type="text" name="ssn" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Address</label>
+          <input type="text" name="address" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Postal Code</label>
+          <input type="text" name="postalCode" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Province</label>
+          <input type="text" name="state" class="form-control" required>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label">Upload Photo ID / KYC Document (PDF, PNG, JPG)</label>
+          <input type="file" name="kycDocument" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required />
+        </div>
+
+          <!-- ✅ Consent Modal -->
+  <div class="modal fade" id="consentModal" tabindex="-1" aria-labelledby="consentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="consentModalLabel">Privacy Policy & Consent</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="white-space: pre-line;">
+          In compliance with Canada's PIPEDA regulations, we collect, use, and store your personal information (such as SIN, KYC documents, and address) solely for identity verification and account management purposes. Your data is encrypted and securely handled.
+
+          By continuing, you consent to the use of this information as per our policy.
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+ <!-- ✅ Consent Checkbox -->
+ <div class="form-check mb-4">
+    <input class="form-check-input" type="checkbox" id="consentCheckbox" />
+    <label class="form-check-label" for="consentCheckbox">
+      I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#consentModal">privacy policy</a> and provide consent to collect and use my personal information.
+    </label>
+  </div>
+
+        <button type="submit" class="btn btn-primary w-100">Submit for Verification</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 🔴 Consent Toast -->
+  <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1060;">
+    <div id="consentToast" class="toast text-bg-danger border-0 align-items-center" role="alert">
+      <div class="d-flex">
+        <div class="toast-body">🚫 Please provide your consent before submitting.</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const form = document.getElementById("completeProfileForm");
+    const consentCheckbox = document.getElementById("consentCheckbox");
+    const consentToast = new bootstrap.Toast(document.getElementById("consentToast"));
+
+    form.addEventListener("submit", function (e) {
+      if (!consentCheckbox.checked) {
+        e.preventDefault();
+        consentToast.show();
+      }
+    });
+  </script>
+
 </body>
 
 </html>

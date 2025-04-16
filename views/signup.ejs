@@ -2,233 +2,263 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>WPG Wallet – Sign Up</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <style>
-        body {
-            background: #f8f9fa;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WPG Wallet – Sign Up</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background: #f8f9fa;
+    }
 
-        .form-section {
-            background-color: #fff;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-            width: 100%;
-            max-width: 600px;
-        }
+    .form-section {
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+      width: 100%;
+      max-width: 600px;
+    }
 
-        .blue-gradient {
-            background: linear-gradient(to right, #3b82f6, #2563eb);
-            color: white;
-        }
+    .blue-gradient {
+      background: linear-gradient(to right, #3b82f6, #2563eb);
+      color: white;
+    }
 
-        .password-toggle {
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            cursor: pointer;
-        }
-    </style>
+    .password-toggle {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
-    <% if (successMessage || errorMessage) { %>
-        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
-            <div class="toast align-items-center text-white <%= successMessage ? 'bg-success' : 'bg-danger' %> show"
-                role="alert">
-                <div class="d-flex">
-                    <div class="toast-body">
-                        <%= successMessage || errorMessage %>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                        aria-label="Close"></button>
-                </div>
-            </div>
+  <% if (successMessage || errorMessage) { %>
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+      <div class="toast align-items-center text-white <%= successMessage ? 'bg-success' : 'bg-danger' %> show" role="alert">
+        <div class="d-flex">
+          <div class="toast-body">
+            <%= successMessage || errorMessage %>
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
-        <% } %>
+      </div>
+    </div>
+  <% } %>
 
-            <div class="container d-flex align-items-center justify-content-center min-vh-100">
-                <div class="w-100 d-flex justify-content-center">
-                    <form id="signupForm" class="form-section" enctype="multipart/form-data">
-                        <input type="hidden" name="idToken" id="idTokenInput" />
+  <div class="container d-flex align-items-center justify-content-center min-vh-100">
+    <div class="w-100 d-flex justify-content-center">
+      <form id="signupForm" class="form-section" enctype="multipart/form-data">
+        <input type="hidden" name="idToken" id="idTokenInput" />
+        <h3 class="mb-4">Sign up</h3>
 
-                        <h3 class="mb-4">Sign up</h3>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label>First Name</label>
+            <input type="text" name="firstName" class="form-control" required />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label>Last Name</label>
+            <input type="text" name="lastName" class="form-control" required />
+          </div>
+        </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label>First Name</label>
-                                <input type="text" name="firstName" class="form-control" required />
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label>Last Name</label>
-                                <input type="text" name="lastName" class="form-control" required />
-                            </div>
-                        </div>
+        <div class="mb-3">
+          <label>Address</label>
+          <input type="text" name="address" class="form-control" required />
+        </div>
 
-                        <div class="mb-3">
-                            <label>Address</label>
-                            <input type="text" name="address" class="form-control" required />
-                        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label>Province</label>
+            <input type="text" name="state" class="form-control" required />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label>Postal Code</label>
+            <input type="text" name="postalCode" class="form-control" required />
+          </div>
+        </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label>Province</label>
-                                <input type="text" name="state" class="form-control" required />
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label>Postal Code</label>
-                                <input type="text" name="postalCode" class="form-control" required />
-                            </div>
-                        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label>Date of Birth</label>
+            <input type="date" name="dob" class="form-control" required />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label>SIN</label>
+            <input type="text" name="ssn" class="form-control" required />
+          </div>
+        </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label>Date of Birth</label>
-                                <input type="date" name="dob" class="form-control" required />
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label>SIN</label>
-                                <input type="text" name="ssn" class="form-control" required />
-                            </div>
-                        </div>
+        <div class="mb-3">
+          <label>Email</label>
+          <input type="email" name="email" id="emailInput" class="form-control" required />
+        </div>
 
-                        <div class="mb-3">
-                            <label>Email</label>
-                            <input type="email" name="email" id="emailInput" class="form-control" required />
-                        </div>
+        <div class="mb-4 position-relative">
+          <label>Password</label>
+          <input type="password" id="passwordInput" class="form-control" required />
+          <span class="password-toggle" onclick="togglePassword('passwordInput')">👁️</span>
+        </div>
 
-                        <div class="mb-4 position-relative">
-                            <label>Password</label>
-                            <input type="password" id="passwordInput" class="form-control" required />
-                            <span class="password-toggle" onclick="togglePassword('passwordInput')">👁️</span>
-                        </div>
+        <div class="mb-4">
+          <label>Upload KYC Document</label>
+          <input type="file" name="kycDocument" accept=".pdf,.jpg,.jpeg,.png" class="form-control" required />
+        </div>
 
-                        <div class="mb-4">
-                            <label>Upload KYC Document</label>
-                            <input type="file" name="kycDocument" accept=".pdf,.jpg,.jpeg,.png" class="form-control"
-                                required />
-                        </div>
+        <!-- ✅ Consent Checkbox -->
+        <div class="form-check mb-4">
+          <input class="form-check-input" type="checkbox" id="consentCheckbox" />
+          <label class="form-check-label" for="consentCheckbox">
+            I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#consentModal">privacy policy</a> and provide consent to collect and use my personal information.
+          </label>
+        </div>
 
-                        <button type="submit" class="btn blue-gradient w-100">Sign up</button>
+        <button type="submit" class="btn blue-gradient w-100">Sign up</button>
 
-                        <div class="text-center mt-3">
-                            Already have an account? <a href="/login">Login</a>
-                        </div>
+        <div class="text-center mt-3">
+          Already have an account? <a href="/login">Login</a>
+        </div>
 
-                        <div class="text-center mt-3">
-                            <button type="button" class="btn btn-outline-danger w-100" id="googleSignup">
-                                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20"
-                                    class="me-2" />
-                                Sign up with Google
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+        <div class="text-center mt-3">
+          <button type="button" class="btn btn-outline-danger w-100" id="googleSignup">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" class="me-2" />
+            Sign up with Google
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-            <!-- 🔐 Toast Function -->
-            <script>
-                function togglePassword(id) {
-                    const input = document.getElementById(id);
-                    input.type = input.type === "password" ? "text" : "password";
-                }
+  <!-- ✅ Consent Modal -->
+  <div class="modal fade" id="consentModal" tabindex="-1" aria-labelledby="consentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="consentModalLabel">Privacy Policy & Consent</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="white-space: pre-line;">
+          In compliance with Canada's PIPEDA regulations, we collect, use, and store your personal information (such as SIN, KYC documents, and address) solely for identity verification and account management purposes. Your data is encrypted and securely handled.
 
-                function showToast(message) {
-                    const toastEl = document.querySelector(".toast");
-                    const toastMsg = document.querySelector(".toast-body");
-                    toastMsg.textContent = message;
-                    const toast = new bootstrap.Toast(toastEl);
-                    toast.show();
-                }
+          By continuing, you consent to the use of this information as per our policy.
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-                window.addEventListener("DOMContentLoaded", () => {
-                    const toastEl = document.querySelector(".toast");
-                    if (toastEl) {
-                        const toast = new bootstrap.Toast(toastEl);
-                        toast.show();
-                    }
-                });
-            </script>
+<!-- ✅ Toast for Consent Required -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1060;">
+    <div id="consentToast" class="toast text-bg-danger border-0 align-items-center" role="alert">
+      <div class="d-flex">
+        <div class="toast-body">🚫 Please provide your consent before signing up.</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+  
 
-            <!-- 🔐 Firebase Logic -->
-            <script type="module">
-                import {
-                    auth,
-                    createUserWithEmailAndPassword,
-                    provider,
-                    signInWithPopup
-                } from "/js/firebase-config.js";
+  <!-- ✅ Bootstrap -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-                const form = document.getElementById("signupForm");
+  <!-- 🔐 Firebase Logic -->
+  <script type="module">
+    import {
+      auth,
+      createUserWithEmailAndPassword,
+      provider,
+      signInWithPopup
+    } from "/js/firebase-config.js";
 
-                form.addEventListener("submit", async (e) => {
-                    e.preventDefault();
-                    const formData = new FormData(form);
-                    const email = formData.get("email");
-                    const password = document.getElementById("passwordInput").value;
+    const form = document.getElementById("signupForm");
+    const consentCheckbox = document.getElementById("consentCheckbox");
+    const consentToast = new bootstrap.Toast(document.getElementById("consentToast"));
 
-                    try {
-                        const cred = await createUserWithEmailAndPassword(auth, email, password);
-                        const idToken = await cred.user.getIdToken();
-                        formData.set("idToken", idToken);
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-                        const res = await fetch("/signup", {
-                            method: "POST",
-                            body: formData,
-                            credentials: "include"
-                        });
+      if (!consentCheckbox.checked) {
+        consentToast.show();
+        return;
+      }
 
-                        if (res.redirected) {
-                            window.location.href = res.url;
-                        } else {
-                            const text = await res.text();
-                            showToast("Signup failed: " + text);
-                        }
-                    } catch (err) {
-                        showToast("❌ Firebase signup failed: " + err.message);
-                    }
-                });
+      const formData = new FormData(form);
+      const email = formData.get("email");
+      const password = document.getElementById("passwordInput").value;
 
-                const googleBtn = document.getElementById("googleSignup");
-                if (googleBtn) {
-                    googleBtn.addEventListener("click", async () => {
-                        try {
-                            provider.setCustomParameters({
-                                prompt: "select_account"
-                            });
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        const idToken = await cred.user.getIdToken();
+        formData.set("idToken", idToken);
 
-                            const result = await signInWithPopup(auth, provider);
-                            const idToken = await result.user.getIdToken();
-                            const name = result.user.displayName || "Google User";
-                            const email = result.user.email;
+        const res = await fetch("/signup", {
+          method: "POST",
+          body: formData,
+          credentials: "include"
+        });
 
-                            const res = await fetch("/google-complete-profile", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json"
-                                },
-                                credentials: "include",
-                                body: JSON.stringify({ idToken, name, email })
-                            });
+        if (res.ok && res.redirected) {
+        showToast("✅ Signup successful! Your profile will be reviewed by an admin.");
+        setTimeout(() => {
+        window.location.href = res.url;
+  }, 3000);
+}
+ else {
+          const text = await res.text();
+          showToast("Signup failed: " + text);
+        }
+      } catch (err) {
+        showToast("❌ Firebase signup failed: " + err.message);
+      }
+    });
 
-                            const data = await res.json();
-                            if (res.ok && data.redirect) {
-                                window.location.href = data.redirect;
-                            } else {
-                                showToast(data.error || "Google signup failed.");
-                            }
-                        } catch (err) {
-                            showToast("❌ Google signup failed: " + err.message);
-                        }
-                    });
-                }
-            </script>
+    const googleBtn = document.getElementById("googleSignup");
+    if (googleBtn) {
+      googleBtn.addEventListener("click", async () => {
+        try {
+          provider.setCustomParameters({ prompt: "select_account" });
+          const result = await signInWithPopup(auth, provider);
+          const idToken = await result.user.getIdToken();
+          const name = result.user.displayName || "Google User";
+          const email = result.user.email;
 
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+          const res = await fetch("/google-complete-profile", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ idToken, name, email })
+          });
+
+          const data = await res.json();
+          if (res.ok && data.redirect) {
+            window.location.href = data.redirect;
+          } else {
+            showToast(data.error || "Google signup failed.");
+          }
+        } catch (err) {
+          showToast("❌ Google signup failed: " + err.message);
+        }
+      });
+    }
+
+    function showToast(message) {
+      const toastEl = document.querySelector(".toast");
+      const toastMsg = document.querySelector(".toast-body");
+      toastMsg.textContent = message;
+      const toast = new bootstrap.Toast(toastEl);
+      toast.show();
+    }
+
+    function togglePassword(id) {
+      const input = document.getElementById(id);
+      input.type = input.type === "password" ? "text" : "password";
+    }
+  </script>
 </body>
-
 </html>
